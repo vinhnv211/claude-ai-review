@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewFindings",
+  "description": "Per-agent findings output. Một file cho mỗi agent chạy trong review.",
+  "type": "object",
+  "required": ["agent", "domain", "findings"],
+  "properties": {
+    "agent": {"type": "string"},
+    "domain": {"type": "string"},
+    "review_id": {"type": "string", "description": "ID của review tổng, ví dụ RV-CMT-20260418-01"},
+    "commit_hash": {
+      "type": "string",
+      "description": "Commit hash the findings were produced from (required when aggregation = per-commit)"
+    },
+    "scope_files": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "File thực tế agent đã review"
+    },
+    "missing_tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "id": {"type": "string", "description": "Ví dụ MT-001"},
+          "description": {"type": "string"},
+          "related_findings": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Danh sách finding id mà test này cover"
+          },
+          "priority": {"type": "string", "enum": ["high", "medium", "low"]}
+        }
+      }
+    },
+    "suggested_new_domain": {
+      "type": "object",
+      "description": "Emitted by generic-review-agent when unclassified code shows a recurring pattern warranting a new domain agent.",
+      "properties": {
+        "suggested_domain": {"type": "string"},
+        "rationale": {"type": "string"},
+        "sample_files": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "title", "evidence", "impact", "recommendation", "confidence"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Format: <DOMAIN_SHORT>-<NNN>, ví dụ DHCP-001, WEB-CGI-014"
+          },
+          "file": {"type": "string"},
+          "function": {"type": "string"},
+          "line": {"type": "integer", "minimum": 1, "description": "Dòng bắt đầu"},
+          "line_end": {"type": "integer", "minimum": 1, "description": "Dòng kết thúc (nếu range)"},
+          "severity": {"type": "string", "enum": ["critical", "major", "minor", "info"]},
+          "category": {
+            "type": "string",
+            "enum": [
+              "security",
+              "correctness",
+              "reliability",
+              "performance",
+              "compat",
+              "style",
+              "test-gap",
+              "memory-safety",
+              "concurrency",
+              "state-machine",
+              "crypto",
+              "protocol",
+              "configuration",
+              "supply-chain",
+              "data-model",
+              "init-script",
+              "socket-lifecycle",
+              "persistence",
+              "scalability",
+              "architecture"
+            ],
+            "description": "Phân loại finding để filter/aggregate. Enum mở rộng v0.1.1: thêm 13 category cho memory/concurrency/protocol/config/build. Khi nghi ngờ, chọn category gần nhất; tránh tự chế giá trị mới ngoài enum (sẽ fail validation)."
+          },
+          "title": {"type": "string", "description": "Tối đa ~80 ký tự, mô tả ngắn gọn vấn đề"},
+          "evidence": {"type": "string", "description": "Đoạn code / log / trace cụ thể chứng minh vấn đề"},
+          "code_snippet": {
+            "type": "string",
+            "description": "Code snippet liên quan (khuyến khích <20 dòng), dùng cho render report"
+          },
+          "impact": {"type": "string", "description": "Hậu quả nếu không fix"},
+          "recommendation": {"type": "string", "description": "Đề xuất cách fix"},
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+          "sub_skill": {
+            "type": "string",
+            "description": "Sub-skill that produced this finding (e.g. web-cgi-skill). Useful for agents delegating to multiple sub-skills."
+          },
+          "references": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "CWE/CVE id, RFC section, commit hash, doc link"
+          },
+          "tags": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Free-form tag (ví dụ: race-condition, memory-leak, input-validation)"
+          },
+          "virtual_source": {
+            "type": "object",
+            "description": "Metadata khi finding thuộc code extract từ tarball (OpenWrt package). Giúp reviewer reproduce và trace về tarball gốc.",
+            "properties": {
+              "package": {"type": "string", "description": "PKG_NAME"},
+              "version": {"type": "string", "description": "PKG_VERSION"},
+              "tarball": {"type": "string", "description": "Tên tarball, ví dụ apps-1.2.4.tar.gz"},
+              "tarball_url": {"type": "string"},
+              "tarball_hash": {"type": "string", "description": "SHA256 (khớp PKG_HASH)"},
+              "via_patch": {
+                "type": ["string", "null"],
+                "description": "Đường dẫn tới patch file gây thay đổi (nếu finding do patch introduce)"
+              },
+              "extract_path": {"type": "string", "description": "Full path trong cache dir, cho automation"},
+              "makefile_path": {"type": "string", "description": "Path của Makefile OpenWrt package"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "review_id": "RV-MODULE-20260418-001",
+  "mode": "module-review",
+  "module_path": "package/network/services/ppp",
+  "change_summary": "Full audit module PPP trước pre-release",
+  "design_note": "Scan toàn bộ module để phát hiện legacy bug và gap test coverage",
+  "constraints": [
+    "Ưu tiên tìm state machine bug",
+    "Check memory ownership trong error paths"
+  ]
+}

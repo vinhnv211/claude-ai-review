@@ -1,0 +1,6 @@
+Trên windows nếu muốn thực hiện trên nhiều project có thể symblink:
+ví dụ:
+Mở powershell với quyền admin, sau đó thực hiện các lệnh sau: 
+$src = 'D:\vnpt\project\claude-review\claude-ai-review'
+New-Item -ItemType SymbolicLink -Path .\.claude   -Target "$src\.claude"
+New-Item -ItemType SymbolicLink -Path .\CLAUDE.md -Target "$src\CLAUDE.md"

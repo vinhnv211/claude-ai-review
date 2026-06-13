@@ -1,0 +1,265 @@
+version: 0.1.2
+
+# Agent Registry — danh sách tất cả review agents hợp lệ
+# Orchestrator chỉ assign agent có id trong registry này
+# Để thêm agent mới: xem orchestrators/review-extension-guide.md
+#
+# Changelog:
+#   0.1.2 (2026-06-14):
+#     - Add binary_asset_extensions (global): file types tự động exclude khỏi
+#       agent scope sau khi map (Bước 7 scope control). Closes RV-MOD-20260614-02
+#       feedback issue #5 (web allowed_paths "nuốt" 52 image files).
+#     - Document category enum aliases (web-review-agent thường dùng tên thân
+#       thuộc như "authentication"/"input-validation"); aggregation skill
+#       normalize trước khi validate.
+#   0.1.1 (2026-06-13):
+#     - Extend tr069-review-agent.allowed_paths to cover vnptt-cwmp/libbbfdm*/libcwmpdm
+#       in dl/ (closes routing anomaly seen in RV-MOD-20260613-01).
+#     - Add shell-script-review-skill + openwrt-shell-domain-skill to
+#       mesh-review-agent.required_skills (mesh glob captures init.d/uci-defaults
+#       under package/**/vnptt-unify/**).
+#     - New agent: python-tools-review-agent (Python build tooling).
+
+# Binary asset extensions — auto-excluded from agent task scope at Bước 7
+# (mapping still recorded in routing_decisions for audit; agent does not read them).
+binary_asset_extensions:
+  - .png
+  - .jpg
+  - .jpeg
+  - .gif
+  - .bmp
+  - .ico
+  - .svg
+  - .webp
+  - .woff
+  - .woff2
+  - .ttf
+  - .eot
+  - .otf
+  - .mp3
+  - .mp4
+  - .wav
+  - .ogg
+  - .pdf
+
+# Category enum aliases — map agent-friendly names → schema enum value.
+# Aggregation skill MUST apply this mapping before writing findings to
+# report.json (else schema validation fails). Unknown values fall through
+# to "correctness" with a routing_warning logged.
+category_aliases:
+  authentication: security
+  auth: security
+  authz: security
+  authorization: security
+  input-validation: security
+  injection: security
+  xss: security
+  csrf: security
+  csp: security
+  cookie-security: security
+  session-management: security
+  config: configuration
+  cfg: configuration
+  maintainability: style
+  documentation: style
+  readability: style
+  dead-code: style
+  build-system: configuration
+  observability: reliability
+  logging: reliability
+  resilience: reliability
+  error-handling: reliability
+
+agents:
+  - id: dhcp-review-agent
+    type: review-agent
+    domain: dhcp
+    capabilities: [protocol, lease, config, timer]
+    triggers: [odhcpd, dnsmasq, dhcp, lease, renew, rebind]
+    allowed_paths:
+      - package/**/odhcpd/**
+      - package/**/dnsmasq/**
+      - apps/**/busybox-1.00/**/udhcp/**
+      - userspace/**/dhcpd/**
+    required_skills:
+      - embedded-c-code-review-skill
+      - dhcp-domain-skill
+      - shell-script-review-skill   # v0.1.1: glob covers etc/init.d/odhcpd + uci-defaults
+      - openwrt-shell-domain-skill
+    output_schema: review-findings.schema.json
+
+  - id: pppoe-review-agent
+    type: review-agent
+    domain: pppoe
+    capabilities: [protocol, session, lcp, reconnect]
+    triggers: [pppoe, ppp, pppd, lcp, chap, pap]
+    allowed_paths:
+      - package/**/ppp/**
+      - apps/**/pppoe/**
+      - apps/**/ppp/**
+      - userspace/**/ppp/**
+    required_skills:
+      - embedded-c-code-review-skill
+      - pppoe-domain-skill
+      - shell-script-review-skill   # v0.1.1: glob covers /etc/ppp/ip-{up,down}, chap-secrets
+      - openwrt-shell-domain-skill
+    output_schema: review-findings.schema.json
+
+  - id: tr069-review-agent
+    type: review-agent
+    domain: tr069
+    capabilities: [cwmp, acs, parameter-model, validation, bbf-data-model]
+    triggers: [tr069, cwmp, acs, tr181, parameter, bbfdm, bbf, icwmp]
+    allowed_paths:
+      - package/**/icwmpd/**
+      - package/**/bbfdmd/**
+      - dl/vnptt-unify-1.0/**/icwmpd/**
+      - dl/vnptt-unify-1.0/unify-modules/vnptt-cwmp/**
+      - dl/vnptt-unify-1.0/lib/libbbfdm/**
+      - dl/vnptt-unify-1.0/lib/libbbfdm-api/**
+      - dl/vnptt-unify-1.0/lib/libcwmpdm/**
+      - apps/**/TR64_69/**
+      - apps/**/cwmp/**
+      - userspace/**/tr069/**
+    required_skills:
+      - embedded-c-code-review-skill
+      - tr069-domain-skill
+      - shell-script-review-skill   # v0.1.1: tr069 glob covers init.d/uci-defaults/firewall.cwmp
+      - openwrt-shell-domain-skill  # under package/**/icwmpd/** and package/**/bbfdmd/**
+    output_schema: review-findings.schema.json
+
+  - id: mesh-review-agent
+    type: review-agent
+    domain: mesh
+    capabilities: [topology, handoff, backhaul, sync]
+    triggers: [mesh, 802.11s, steering, topology, controller, agent]
+    allowed_paths:
+      - package/**/vnptt-unify/**
+      - dl/vnptt-unify-1.0/**
+      - apps/**/vnptt_topo/**
+      - apps/**/vnptt_apac/**
+    required_skills:
+      - embedded-c-code-review-skill
+      - mesh-domain-skill
+      - shell-script-review-skill   # v0.1.1: mesh glob covers init.d/uci-defaults
+      - openwrt-shell-domain-skill  # under package/**/vnptt-unify/** — needed for those files
+    output_schema: review-findings.schema.json
+
+  - id: web-review-agent
+    type: review-agent
+    domain: web
+    capabilities: [ui, validation, api-binding, config-view, html, javascript, css, cgi, luci]
+    triggers: [web, gui, ui, form, api, html, js, css, luci, cgi, webgui, httpd, lua]
+    allowed_paths:
+      - package/**/webclient/**
+      - dl/**/webclient-1.0/**
+      - package/**/webserver/**
+      - dl/**/webserver-1.0/**
+      - package/**/lighttpd/**
+      - apps/**/cgi-bin/**
+      - apps/**/boa-asp/**
+      - "**/*.html"
+      - "**/*.htm"
+      - "**/*.js"
+      - "**/*.css"
+      - "**/*.lua"
+    required_skills:
+      - web-domain-skill
+      - web-html-skill
+      - web-javascript-skill
+      - web-cgi-skill
+      - web-luci-skill
+      - embedded-c-code-review-skill   # cho CGI C
+    output_schema: review-findings.schema.json
+
+  - id: wifi-driver-review-agent
+    type: review-agent
+    domain: wifi-driver
+    capabilities: [driver, callback, cfg80211, mac80211, memory]
+    triggers: [wifi, driver, cfg80211, mac80211, mt_wifi, qca, ath10k, ath11k]
+    allowed_paths:
+      - modules/**/MT7916_v7623/**
+      - package/**/mt-wifi7/**
+      - package/**/mt-wifi/**
+    required_skills:
+      - embedded-c-code-review-skill
+      - wifi-driver-domain-skill
+    output_schema: review-findings.schema.json
+
+  - id: openwrt-build-review-agent
+    type: review-agent
+    domain: openwrt-build
+    capabilities: [makefile, patches, overlay, init-script, uci-defaults, hotplug, shell, procd, ubus]
+    triggers:
+      - PKG_SOURCE
+      - PKG_HASH
+      - PKG_VERSION
+      - PKG_MAINTAINER
+      - "define Package"
+      - quilt
+      - uci-defaults
+      - USE_PROCD
+      - procd_open_instance
+      - config_load
+      - config_foreach
+      - "/lib/functions.sh"
+    allowed_paths:
+      - package/**/Makefile
+      - package/**/patches/**
+      - package/**/files/**
+      - feeds/**/Makefile
+      - feeds/**/patches/**
+      - feeds/**/files/**
+      - package/base-files/**
+      - scripts/**/*.sh
+      - "**/etc/init.d/*"
+      - "**/etc/uci-defaults/*"
+      - "**/etc/hotplug.d/**"
+      - "**/lib/functions.sh"
+      - "**/lib/functions/*.sh"
+      - "**/lib/upgrade/*.sh"
+    required_skills:
+      - openwrt-build-domain-skill
+      - openwrt-source-context-skill
+      - shell-script-review-skill
+      - openwrt-shell-domain-skill
+    output_schema: review-findings.schema.json
+
+  - id: python-tools-review-agent
+    type: review-agent
+    domain: python-tools
+    capabilities: [python, build-tools, code-generation, subprocess, dockerfile]
+    triggers: [python, .py, subprocess, jinja2, jsonschema, dockerfile, FROM, RUN, pip]
+    allowed_paths:
+      - "**/*.py"
+      - "**/Dockerfile"
+      - "**/Dockerfile.*"
+      - "**/requirements*.txt"
+      - "**/pyproject.toml"
+      - "**/setup.py"
+      - "package/**/tools/**/*.py"
+      - "scripts/**/*.py"
+    required_skills:
+      - python-tools-domain-skill
+      - shell-script-review-skill   # tools thường gọi shell qua subprocess
+    output_schema: review-findings.schema.json
+
+  # ---------------------------------------------------------------------------
+  # Fallback agent — dùng khi code thay đổi không match domain nào ở trên
+  # ---------------------------------------------------------------------------
+  - id: generic-review-agent
+    type: review-agent
+    domain: generic
+    capabilities: [fallback, c-generic]
+    triggers: []                 # không có trigger — chỉ dùng khi các agent khác không match
+    is_fallback: true            # flag đặc biệt, orchestrator dùng khi domain mapping fails
+    allowed_paths:
+      - "**/*.c"
+      - "**/*.h"
+      - "**/*.cpp"
+      - "**/*.hpp"
+      - "**/*.sh"
+    required_skills:
+      - embedded-c-code-review-skill
+      - shell-script-review-skill
+    output_schema: review-findings.schema.json

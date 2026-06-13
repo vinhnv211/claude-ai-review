@@ -1,0 +1,1819 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Review Framework — Tài liệu kỹ thuật</title>
+<style>
+  :root{
+    --primary:#1e40af; --primary-light:#3b82f6;
+    --secondary:#0f172a; --accent:#f59e0b;
+    --success:#10b981; --danger:#ef4444;
+    --info:#6366f1;
+    --bg:#f8fafc; --surface:#ffffff; --border:#e2e8f0;
+    --text:#1e293b; --text-muted:#64748b;
+    --code-bg:#0f172a; --code-text:#e2e8f0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;}
+  .layout{display:flex;min-height:100vh;}
+  nav{width:280px;min-width:280px;background:var(--secondary);color:#cbd5e1;position:sticky;top:0;height:100vh;overflow-y:auto;}
+  main{flex:1;padding:2rem 3rem;max-width:960px;}
+  .nav-header{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid #334155;}
+  .nav-header h1{font-size:.95rem;font-weight:700;color:#f1f5f9;letter-spacing:.05em;text-transform:uppercase;}
+  .nav-header p{font-size:.75rem;color:#64748b;margin-top:.25rem;}
+  .nav-section{padding:.75rem 0;border-bottom:1px solid #1e293b;}
+  .nav-section-title{padding:.25rem 1.25rem;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#475569;}
+  nav a{display:block;padding:.4rem 1.25rem .4rem 1.5rem;color:#94a3b8;text-decoration:none;font-size:.85rem;border-left:2px solid transparent;transition:all .15s;}
+  nav a:hover{color:#f1f5f9;background:#1e293b;border-left-color:var(--primary-light);}
+  nav a.active{color:#f1f5f9;border-left-color:var(--accent);background:#1e293b;}
+  h1{font-size:2rem;font-weight:800;color:var(--secondary);margin-bottom:.5rem;}
+  h2{font-size:1.4rem;font-weight:700;color:var(--secondary);margin:2.5rem 0 1rem;padding-bottom:.5rem;border-bottom:2px solid var(--border);}
+  h3{font-size:1.1rem;font-weight:600;color:var(--primary);margin:1.75rem 0 .75rem;}
+  h4{font-size:.95rem;font-weight:600;color:var(--secondary);margin:1.25rem 0 .5rem;}
+  p{margin-bottom:.75rem;} ul,ol{margin:.5rem 0 .75rem 1.5rem;} li{margin-bottom:.3rem;}
+  .section{margin-bottom:3rem;}
+  .page-header{margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:3px solid var(--primary);}
+  .page-header .subtitle{color:var(--text-muted);font-size:1rem;margin-top:.5rem;}
+  .version-badge{display:inline-block;background:var(--primary);color:white;padding:.2rem .6rem;border-radius:999px;font-size:.75rem;font-weight:600;margin-left:.5rem;vertical-align:middle;}
+  pre{background:var(--code-bg);color:var(--code-text);padding:1.1rem 1.25rem;border-radius:.5rem;overflow-x:auto;font-size:.82rem;line-height:1.55;margin:.75rem 0 1rem;border:1px solid #334155;white-space:pre;font-family:'Cascadia Code','Fira Code',Consolas,monospace;}
+  code{font-family:'Cascadia Code','Fira Code',Consolas,monospace;}
+  p code,li code,td code{background:#e2e8f0;color:#b91c1c;padding:.1rem .35rem;border-radius:.25rem;font-size:.85em;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:.75rem;padding:1.25rem 1.5rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .card-title{font-weight:700;color:var(--secondary);font-size:1rem;margin-bottom:.5rem;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0;}
+  @media (max-width:900px){.grid-2{grid-template-columns:1fr;}}
+  .callout{padding:1rem 1.25rem;border-radius:.5rem;border-left:4px solid;margin:1rem 0;}
+  .callout-info{background:#eff6ff;border-color:var(--primary-light);}
+  .callout-warning{background:#fffbeb;border-color:var(--accent);}
+  .callout-success{background:#f0fdf4;border-color:var(--success);}
+  .callout-title{font-weight:700;font-size:.85rem;margin-bottom:.35rem;}
+  table{width:100%;border-collapse:collapse;margin:.75rem 0 1rem;font-size:.875rem;}
+  th{background:#f1f5f9;text-align:left;padding:.6rem .75rem;font-weight:600;border:1px solid var(--border);}
+  td{padding:.5rem .75rem;border:1px solid var(--border);vertical-align:top;}
+  tr:nth-child(even) td{background:#f8fafc;}
+  .flow{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;margin:1rem 0;}
+  .flow-step{background:var(--primary);color:white;padding:.5rem 1rem;border-radius:.375rem;font-size:.85rem;font-weight:600;}
+  .flow-arrow{color:var(--text-muted);font-size:1.2rem;}
+  .steps{counter-reset:step;margin:1rem 0;}
+  .step{display:flex;gap:1rem;margin-bottom:1.25rem;align-items:flex-start;}
+  .step-num{counter-increment:step;min-width:2rem;height:2rem;background:var(--primary);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0;}
+  .step-num::before{content:counter(step);}
+  .step-content{flex:1;padding-top:.25rem;}
+  .content-page{display:none;} .content-page.active{display:block;}
+  .pill{display:inline-block;background:#e0e7ff;color:#4338ca;padding:.1rem .5rem;border-radius:.25rem;font-size:.7rem;font-weight:600;margin-left:.35rem;}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ========== SIDEBAR ========== -->
+<nav id="sidebar">
+  <div class="nav-header">
+    <h1>AI Review Framework</h1>
+    <p>v0.1.0 · Embedded C / Shell / WebGUI</p>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Tổng quan</div>
+    <a href="#overview" onclick="showPage('overview')">Giới thiệu &amp; Mục tiêu</a>
+    <a href="#architecture" onclick="showPage('architecture')">Kiến trúc tổng thể</a>
+    <a href="#structure" onclick="showPage('structure')">Cấu trúc thư mục</a>
+    <a href="#modes" onclick="showPage('modes')">Review Modes</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Thành phần chi tiết</div>
+    <a href="#orchestrator" onclick="showPage('orchestrator')">Orchestrator</a>
+    <a href="#agents" onclick="showPage('agents')">Agents</a>
+    <a href="#skills" onclick="showPage('skills')">Skills</a>
+    <a href="#schemas" onclick="showPage('schemas')">Schemas</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Thực thi</div>
+    <a href="#workflow-examples" onclick="showPage('workflow-examples')">Ví dụ Workflow</a>
+    <a href="#output" onclick="showPage('output')">Output &amp; Artifacts</a>
+    <a href="#openwrt" onclick="showPage('openwrt')">OpenWrt tarball source</a>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Mở rộng &amp; Tùy biến</div>
+    <a href="#modify" onclick="showPage('modify')">Sửa đổi Agent/Skill</a>
+    <a href="#add-skill" onclick="showPage('add-skill')">Thêm Skill mới</a>
+    <a href="#add-agent" onclick="showPage('add-agent')">Thêm Agent mới</a>
+  </div>
+</nav>
+
+<!-- ========== MAIN ========== -->
+<main id="main-content">
+
+<!-- ===== OVERVIEW ===== -->
+<div id="overview" class="content-page active">
+  <div class="page-header">
+    <h1>AI Review Framework <span class="version-badge">v0.1.0</span></h1>
+    <p class="subtitle">Multi-agent code review framework cho dự án embedded (router / wifi AP / camera IP)</p>
+  </div>
+
+  <div class="section">
+    <h2>Giới thiệu</h2>
+    <p><strong>AI Review Framework</strong> là hệ thống review code sử dụng nhiều AI agent phối hợp,
+    thiết kế cho các dự án embedded: router, wifi AP, camera IP, set-top box. Framework cover:
+    code C/C++ (source + kernel driver), shell script (POSIX/ash/bash + OpenWrt idioms), WebGUI
+    (HTML/JS/CSS/Lua/LuCI/CGI), và OpenWrt build infrastructure (Makefile/patches/overlay/tarball).</p>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Phiên bản v0.1.0 — stable release đầu tiên</div>
+      <ul>
+        <li><strong>8 review agents</strong>: dhcp, pppoe, tr069, mesh, wifi-driver, web, openwrt-build, generic</li>
+        <li><strong>8 core skills</strong>: git-context, openwrt-source-context, embedded-c-code-review,
+            shell-script-review, review-domain-mapping, review-aggregation, review-risk, review-report-render</li>
+        <li><strong>11 domain skills</strong>: 5 protocol (dhcp/pppoe/tr069/mesh/wifi) + 5 web (domain/html/js/cgi/luci) + 2 OpenWrt (build/shell)</li>
+        <li><strong>5 schemas</strong>: agent-registry, review-task, review-plan, review-findings, review-report</li>
+        <li><strong>4 review modes</strong>: diff / commit / module / full</li>
+        <li><strong>3 output formats</strong>: JSON canonical / Markdown / HTML self-contained</li>
+        <li><strong>Routing rules</strong>: virtual-file bypass, longest-glob tie-breaker, is_fallback-last</li>
+        <li><strong>OpenWrt tarball</strong>: auto fetch + SHA256 verify + apply patches + synthetic diff + virtual path</li>
+      </ul>
+    </div>
+
+    <h2>Mục tiêu</h2>
+    <ul>
+      <li>Review mã nguồn nhất quán theo domain kỹ thuật (protocol, driver, web)</li>
+      <li>Hỗ trợ nhiều cách chọn phạm vi review: commit mới nhất, N commit gần nhất, commit theo ID, toàn module, PR diff</li>
+      <li>Không bỏ sót file — code không thuộc domain nào vẫn được review bởi fallback agent</li>
+      <li>Dễ mở rộng: thêm agent / skill qua file markdown + registry, không sửa core</li>
+      <li>Output chuẩn hóa theo JSON schema — có thể tích hợp CI/gate</li>
+    </ul>
+
+    <h2>Phạm vi</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title" style="color:var(--success)">✓ Hỗ trợ</div>
+        <ul>
+          <li>Ngôn ngữ C/C++ (OpenWrt, embedded Linux, vendor SDK)</li>
+          <li>Shell (POSIX/ash/bash) + OpenWrt shell idioms (procd/ubus/UCI/<code>/lib/functions.sh</code>)</li>
+          <li>WebGUI: HTML, JS, CSS, Lua/LuCI, CGI (C/shell)</li>
+          <li>8 domain agents: DHCP, PPPoE, TR-069, Mesh, WiFi Driver, Web, OpenWrt Build, Generic (fallback)</li>
+          <li>Git integration cho commit / module review</li>
+          <li>OpenWrt tarball source (<code>dl/*.tar.gz</code>) — auto extract + apply patches</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--danger)">✗ Ngoài phạm vi</div>
+        <ul>
+          <li>Review từng dòng code chi tiết</li>
+          <li>Viết patch / fix / refactor tự động</li>
+          <li>Debug root cause sâu (cần log + context runtime)</li>
+          <li>Thiết kế kiến trúc hệ thống mới</li>
+          <li>Phân tích git history dài hạn, metrics</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ARCHITECTURE ===== -->
+<div id="architecture" class="content-page">
+  <div class="page-header">
+    <h1>Kiến trúc tổng thể</h1>
+    <p class="subtitle">Mô hình multi-agent, hierarchical, driven by schema</p>
+  </div>
+
+  <div class="section">
+    <h2>Layered Architecture — 5 tầng</h2>
+    <p>Dòng chảy đầy đủ từ yêu cầu user → artifact cuối cùng. Mỗi tầng có trách nhiệm
+    riêng, giao tiếp qua schema JSON.</p>
+
+<pre>
+┌─────────────────────────────────────────────────────────────────────┐
+│  TẦNG 1 — USER / CI                                                 │
+│  "review commit gần nhất" | "review 3 commit" | "review module X"   │
+│  "review PR" | "review full audit"                                  │
+└────────────────────────────────┬────────────────────────────────────┘
+                                 │ review-request.schema.json
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  TẦNG 2 — CONTEXT EXTRACTION (Bước 0 của Orchestrator)              │
+│                                                                     │
+│  ┌─────────────────────────┐    ┌────────────────────────────────┐  │
+│  │ 0.1 git-context-skill   │    │ 0.2 openwrt-source-context-    │  │
+│  │  • resolve commit_spec  │───▶│     skill (nếu detect package  │  │
+│  │  • diff / changed_files │    │     có PKG_SOURCE + PKG_HASH)  │  │
+│  │  • module ls-files      │    │  • fetch dl/&lt;pkg&gt;.tar.gz       │  │
+│  └─────────────────────────┘    │  • verify SHA256 (fail-closed) │  │
+│                                 │  • apply patches series        │  │
+│                                 │  • sinh synthetic diff         │  │
+│                                 │  • virtual path + meta         │  │
+│                                 └────────────────────────────────┘  │
+└────────────────────────────────┬────────────────────────────────────┘
+                                 │ changed_files (git + virtual)
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  TẦNG 3 — REVIEW ORCHESTRATOR (10 bước)                             │
+│                                                                     │
+│  1. Change Understanding       6. Agent Selection                   │
+│  2. Domain Mapping  ───┐       7. Scope Control                     │
+│     2a virtual routing │       8. Aggregation                       │
+│     2b path + longest- │       9. Gap Detection                     │
+│        glob tie-break  │      10. Final Output (verdict + render)   │
+│     2c fallback chain  │                                            │
+│  3. Unclassified       ▼                                            │
+│  4. Strategy     (routing_decisions[] ghi vào plan.json)            │
+│  5. Task Decomposition                                              │
+│                                                                     │
+│  Dùng: review-domain-mapping-skill, review-aggregation-skill,       │
+│        review-risk-skill                                            │
+└──┬────────┬────────┬────────┬────────┬────────┬────────┬───────┬──┘
+   │        │        │        │        │        │        │       │
+   ▼        ▼        ▼        ▼        ▼        ▼        ▼       ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  TẦNG 4 — REVIEW AGENTS (8 agents, cùng shape 8 section)            │
+│                                                                     │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐              │
+│  │ DHCP │ │PPPoE │ │TR-069│ │ Mesh │ │ WiFi │ │ Web  │              │
+│  │      │ │      │ │      │ │      │ │ Drv  │ │      │              │
+│  └──────┘ └──────┘ └──────┘ └──────┘ └──────┘ └──────┘              │
+│      Domain agents — review source code theo chuyên môn kỹ thuật    │
+│                                                                     │
+│  ┌────────────────────┐                         ┌──────────────┐    │
+│  │  OpenWrt Build     │                         │   Generic    │    │
+│  │  Makefile/patches/ │                         │  (fallback,  │    │
+│  │  files/base-files/ │                         │ is_fallback) │    │
+│  │  init.d/shell      │                         └──────────────┘    │
+│  └────────────────────┘                                             │
+│    Build-level agent — khác biệt: review                            │
+│    infrastructure (build/shell/overlay),                            │
+│    không phải source upstream                                       │
+│                                                                     │
+│  Mỗi agent: input = review-task, output = review-findings           │
+│  review trong scope_files, không đọc toàn repo                      │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  TẦNG 4.5 — SKILL KNOWLEDGE BASE (shared, tra cứu theo yêu cầu)     │
+│                                                                     │
+│  Core skills (review logic + context):                              │
+│    • embedded-c-code-review-skill    ← dùng bởi mọi agent review C  │
+│    • shell-script-review-skill       ← dùng cho mọi file .sh        │
+│    • git-context-skill               ← Bước 0.1                     │
+│    • openwrt-source-context-skill    ← Bước 0.2 (tarball)           │
+│    • review-domain-mapping-skill     ← Bước 2 routing               │
+│    • review-aggregation-skill        ← Bước 8 merge findings        │
+│    • review-risk-skill               ← Bước 9 risk summary          │
+│    • review-report-render-skill      ← Bước 10 render               │
+│                                                                     │
+│  Domain skills (knowledge chuyên sâu per domain):                   │
+│    Protocol / HW:                                                   │
+│      dhcp-domain-skill · pppoe-domain-skill · tr069-domain-skill    │
+│      mesh-domain-skill · wifi-driver-domain-skill                   │
+│    Web (domain + 4 sub-skill):                                      │
+│      web-domain-skill + web-html + web-javascript + web-cgi         │
+│      + web-luci                                                     │
+│    OpenWrt build / shell:                                           │
+│      openwrt-build-domain-skill  (Makefile/patches/init/uci/hotplug)│
+│      openwrt-shell-domain-skill  (procd/ubus/UCI API/base-files)    │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │ findings[] từ mỗi agent
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  TẦNG 5 — RENDER & OUTPUT (Bước 10 của Orchestrator)                │
+│                                                                     │
+│  review-report-render-skill:                                        │
+│    • Merge findings → review-report.schema.json                     │
+│    • Compute verdict (block / needs-fix / ship)                     │
+│    • Rank top_findings (severity × confidence × category)           │
+│    • Sinh review_id: RV-&lt;MODE&gt;-&lt;YYYYMMDD&gt;-&lt;SEQ&gt;[-&lt;hash&gt;]            │
+│    • Render Markdown + HTML (self-contained, inline CSS)            │
+│    • Ghi artifacts + update .review/index.json                      │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  ARTIFACTS — .review/&lt;review_id&gt;/                                   │
+│    meta.json   · plan.json   · report.json                          │
+│    report.md   · report.html · findings/&lt;agent&gt;.json                │
+└─────────────────────────────────────────────────────────────────────┘
+</pre>
+
+    <h2>Phân loại Agent theo vai trò</h2>
+    <p>8 agent chia thành 3 nhóm theo mục đích review. Hiểu rõ phân loại giúp routing
+    chính xác và tránh duplicate work.</p>
+    <table>
+      <tr>
+        <th>Nhóm</th>
+        <th>Agent</th>
+        <th>Review cái gì</th>
+        <th>Tầng trong code</th>
+      </tr>
+      <tr>
+        <td rowspan="5"><strong>Domain</strong><br>(source upstream)</td>
+        <td><code>dhcp-review-agent</code></td>
+        <td>DHCP server/client/lease protocol</td>
+        <td rowspan="5">Source C trong package (hoặc virtual path từ tarball)</td>
+      </tr>
+      <tr><td><code>pppoe-review-agent</code></td><td>PPP/PPPoE session, LCP, reconnect</td></tr>
+      <tr><td><code>tr069-review-agent</code></td><td>CWMP / TR-181 parameter model</td></tr>
+      <tr><td><code>mesh-review-agent</code></td><td>Mesh topology, backhaul, steering</td></tr>
+      <tr><td><code>wifi-driver-review-agent</code></td><td>cfg80211/mac80211 driver</td></tr>
+      <tr>
+        <td rowspan="2"><strong>Cross-layer</strong></td>
+        <td><code>web-review-agent</code></td>
+        <td>Frontend + backend WebGUI — cover nhiều ngôn ngữ qua sub-skill</td>
+        <td>HTML/JS/CSS/Lua/CGI (C + shell)</td>
+      </tr>
+      <tr>
+        <td><code>openwrt-build-review-agent</code></td>
+        <td>Build infrastructure + system shell — Makefile, patches, overlay,
+            base-files, init.d, uci-defaults, hotplug, /lib/functions.sh</td>
+        <td>Package build files + shell glue (KHÔNG phải source upstream)</td>
+      </tr>
+      <tr>
+        <td><strong>Fallback</strong></td>
+        <td><code>generic-review-agent</code></td>
+        <td>C/C++/shell không thuộc domain nào — áp checklist chung</td>
+        <td>Utility, helper, lib chưa có domain agent riêng</td>
+      </tr>
+    </table>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Tại sao openwrt-build-review-agent đứng riêng?</div>
+      <p>Domain agent (DHCP/PPPoE/…) review <em>logic giao thức</em>. openwrt-build
+      review <em>vỏ bọc của package</em> — Makefile, patches, script init/system,
+      /lib/functions.sh. Hai tầng hoàn toàn khác: cùng 1 commit bump
+      <code>PKG_VERSION</code> có thể đụng cả Makefile (build agent review) lẫn source
+      trong tarball (domain agent review, qua openwrt-source-context-skill sinh synthetic
+      diff). Hai agent chạy song song, ghép findings ở Bước 8.</p>
+    </div>
+
+    <h2>Nguyên tắc thiết kế</h2>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Separation of Concerns</div>
+        <p>Orchestrator điều phối, agents review chuyên sâu, skills cung cấp tri thức.
+        Mỗi layer có trách nhiệm rõ, không chồng chéo.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Schema-driven</div>
+        <p>Giao tiếp giữa các thành phần qua JSON schema (task / plan / findings).
+        Thay đổi nội dung không phá contract.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Extensibility</div>
+        <p>Thêm agent / skill mới qua markdown + registry entry.
+        Core orchestrator không cần sửa khi mở rộng domain.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">No missed file</div>
+        <p>Mọi file trong scope đều có agent review. File không match domain → fallback
+        tới <code>generic-review-agent</code>.</p>
+      </div>
+    </div>
+
+    <h2>Đồng nhất mọi Agent</h2>
+    <p>Tất cả 8 agent tuân theo cùng một contract và workflow skeleton:</p>
+    <ul>
+      <li>Nhận <code>review-task</code> (scope_files + objective + focus_tags)</li>
+      <li>Review trong phạm vi được cấp</li>
+      <li>Áp dụng core skill + domain skill tương ứng</li>
+      <li>Trả <code>review-findings</code> (severity / evidence / impact / recommendation / confidence)</li>
+    </ul>
+    <p>Agent phức tạp (như Web) có nhiều loại file con — nhưng vẫn giữ workflow skeleton này;
+    chỉ thêm bước phân loại file bên trong để delegate sang sub-skill phù hợp. Về mặt kiến trúc,
+    Web Agent có shape giống các agent khác.</p>
+  </div>
+</div>
+
+<!-- ===== STRUCTURE ===== -->
+<div id="structure" class="content-page">
+  <div class="page-header">
+    <h1>Cấu trúc thư mục</h1>
+    <p class="subtitle">Directory tree và vai trò từng file</p>
+  </div>
+
+  <div class="section">
+    <h2>Directory Tree</h2>
+<pre>ai-review-framework/
+├── README.md                              Tổng quan framework
+│
+├── orchestrators/
+│   ├── review-orchestrator.md             Orchestrator chính
+│   └── review-extension-guide.md          Hướng dẫn mở rộng
+│
+├── agents/review/                         8 review agents
+│   ├── dhcp-review-agent.md
+│   ├── pppoe-review-agent.md
+│   ├── tr069-review-agent.md
+│   ├── mesh-review-agent.md
+│   ├── wifi-driver-review-agent.md
+│   ├── web-review-agent.md
+│   ├── openwrt-build-review-agent.md      OpenWrt Makefile/patches/files
+│   └── generic-review-agent.md            Fallback agent
+│
+├── skills/
+│   ├── core/                              Skills dùng chung
+│   │   ├── git-context-skill.md
+│   │   ├── openwrt-source-context-skill.md  Extract tarball + patches
+│   │   ├── embedded-c-code-review-skill.md
+│   │   ├── shell-script-review-skill.md     Shell generic (POSIX/ash/bash)
+│   │   ├── review-domain-mapping-skill.md
+│   │   ├── review-aggregation-skill.md
+│   │   ├── review-risk-skill.md
+│   │   └── review-report-render-skill.md    Render JSON → MD/HTML + naming
+│   └── domains/                           Skills theo domain
+│       ├── dhcp-domain-skill.md
+│       ├── pppoe-domain-skill.md
+│       ├── tr069-domain-skill.md
+│       ├── mesh-domain-skill.md
+│       ├── wifi-driver-domain-skill.md
+│       ├── web-domain-skill.md
+│       ├── web-html-skill.md              Web sub-skill
+│       ├── web-javascript-skill.md        Web sub-skill
+│       ├── web-cgi-skill.md               Web sub-skill
+│       ├── web-luci-skill.md              Web sub-skill
+│       ├── openwrt-build-domain-skill.md  OpenWrt build patterns
+│       └── openwrt-shell-domain-skill.md  OpenWrt shell (procd/ubus/uci/base-files)
+│
+├── schemas/                               JSON/YAML contracts
+│   ├── agent-registry.yaml
+│   ├── review-task.schema.json
+│   ├── review-plan.schema.json
+│   ├── review-findings.schema.json        Per-agent output
+│   └── review-report.schema.json          Aggregated report (input cho render)
+│
+├── examples/                              Input/output mẫu
+│   ├── review-request.example.json
+│   ├── review-request-commit.example.json
+│   ├── review-request-module.example.json
+│   ├── review-plan.example.json
+│   ├── review-findings.example.json
+│   ├── review-findings-generic.example.json
+│   ├── review-report.example.json         Aggregated report mẫu
+│   ├── review-report.example.md           Render Markdown mẫu
+│   └── review-report.example.html         Render HTML mẫu
+│
+├── .review/                               (Runtime) thư mục artifacts
+│   ├── index.json                         Danh sách mọi review đã chạy
+│   └── RV-&lt;MODE&gt;-&lt;YYYYMMDD&gt;-&lt;SEQ&gt;/        Một review
+│       ├── meta.json                      id, verdict, stats (CI gate)
+│       ├── plan.json
+│       ├── report.json
+│       ├── report.md
+│       ├── report.html
+│       └── findings/&lt;agent&gt;.json
+│
+└── docs/
+    └── index.html                         Tài liệu này
+</pre>
+
+    <h2>Quy tắc đặt tên</h2>
+    <table>
+      <tr><th>Loại</th><th>Pattern</th><th>Ví dụ</th></tr>
+      <tr><td>Domain agent</td><td><code>&lt;domain&gt;-review-agent.md</code></td><td><code>pppoe-review-agent.md</code></td></tr>
+      <tr><td>Domain skill</td><td><code>&lt;domain&gt;-domain-skill.md</code></td><td><code>pppoe-domain-skill.md</code></td></tr>
+      <tr><td>Sub-skill</td><td><code>&lt;domain&gt;-&lt;aspect&gt;-skill.md</code></td><td><code>web-cgi-skill.md</code></td></tr>
+      <tr><td>Core skill</td><td><code>&lt;concern&gt;-skill.md</code></td><td><code>git-context-skill.md</code></td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== MODES ===== -->
+<div id="modes" class="content-page">
+  <div class="page-header">
+    <h1>Review Modes</h1>
+    <p class="subtitle">4 chế độ review với commit selection linh hoạt</p>
+  </div>
+
+  <div class="section">
+    <h2>Tổng quan các mode</h2>
+    <table>
+      <tr><th>Mode</th><th>Dùng khi</th><th>Input chính</th></tr>
+      <tr><td><code>diff-review</code></td><td>Review PR / patch</td><td>git diff hoặc changed_files list</td></tr>
+      <tr><td><code>commit-review</code></td><td>Review 1–10 commit(s)</td><td><code>commit_spec</code> (ref + count + aggregation)</td></tr>
+      <tr><td><code>module-review</code></td><td>Review toàn bộ module</td><td><code>module_path</code></td></tr>
+      <tr><td><code>full-review</code></td><td>Audit code cũ / pre-release</td><td>Danh sách files</td></tr>
+    </table>
+
+    <h2>Commit Selection (<code>commit-review</code>)</h2>
+    <p><code>commit_spec</code> là object linh hoạt hỗ trợ nhiều use case:</p>
+    <table>
+      <tr><th>Use case</th><th>User yêu cầu</th><th><code>commit_spec</code></th></tr>
+      <tr><td>Commit gần nhất</td><td>"review commit gần nhất"</td><td><code>{ref:"HEAD", count:1}</code></td></tr>
+      <tr><td>N commit gần nhất</td><td>"review 3 commit gần nhất"</td><td><code>{ref:"HEAD", count:3}</code></td></tr>
+      <tr><td>Commit thứ K gần nhất</td><td>"review commit thứ 2 gần nhất"</td><td><code>{ref:"HEAD~1", count:1}</code></td></tr>
+      <tr><td>Commit cụ thể</td><td>"review commit abc123"</td><td><code>{ref:"abc123", count:1}</code></td></tr>
+      <tr><td>N commit từ hash</td><td>"review 2 commit từ abc123"</td><td><code>{ref:"abc123", count:2}</code></td></tr>
+    </table>
+
+    <h3>Quy ước "commit thứ K gần nhất"</h3>
+    <table>
+      <tr><th>Vị trí</th><th>Git ref</th></tr>
+      <tr><td>Thứ 1 gần nhất</td><td><code>HEAD</code></td></tr>
+      <tr><td>Thứ 2 gần nhất</td><td><code>HEAD~1</code></td></tr>
+      <tr><td>Thứ K gần nhất</td><td><code>HEAD~(K-1)</code></td></tr>
+    </table>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Giới hạn</div>
+      <ul>
+        <li><code>count</code> ∈ [1, 10]. Yêu cầu &gt; 10 sẽ bị reject.</li>
+        <li><code>ref</code> phải resolve được (hash tồn tại, HEAD~N trong depth của repo).</li>
+        <li><code>aggregation:"combined"</code> (mặc định): 1 diff tổng cho cả range, 1 review pass.</li>
+        <li><code>aggregation:"per-commit"</code>: review mỗi commit riêng, findings tách theo commit.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ORCHESTRATOR ===== -->
+<div id="orchestrator" class="content-page">
+  <div class="page-header">
+    <h1>Orchestrator</h1>
+    <p class="subtitle">Điều phối toàn bộ phase code review</p>
+  </div>
+
+  <div class="section">
+    <h2>Vai trò</h2>
+    <p><code>review-orchestrator</code> nhận review request, lập kế hoạch, phân công các sub-agent,
+    tổng hợp kết quả thành report cuối. Đây là điểm vào duy nhất của framework từ phía user/CI.</p>
+
+    <h2>Workflow 10 bước</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Context Extraction</strong>: (0.1) gọi <code>git-context-skill</code> resolve <code>commit_spec</code> / liệt kê module files. (0.2) detect OpenWrt package pattern (Makefile có <code>PKG_SOURCE</code> + <code>PKG_HASH</code>) → gọi <code>openwrt-source-context-skill</code> để fetch + verify tarball, apply patches, sinh synthetic diff + virtual files.</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Change Understanding</strong>: đọc diff / changed_files / commit messages, tóm tắt intent, xác định domain chính/phụ.</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Domain Mapping</strong> (3 giai đoạn): <br>
+        <strong>2.a</strong> Virtual files (có <code>virtual_source</code>) → match theo basename trigger / extension, bypass <code>allowed_paths</code>.<br>
+        <strong>2.b</strong> File git thật → path match, tie-breaker: <em>longest-glob wins</em> → extension-qualified → domain agent &gt; build agent. Skip agent có <code>is_fallback: true</code>.<br>
+        <strong>2.c</strong> Fallback: web extension → <code>web-review-agent</code>; shell OpenWrt path → <code>openwrt-build-review-agent</code>; shell khác → <code>generic-review-agent</code>; C → <code>generic-review-agent</code>; còn lại → <code>unclassified_files</code>.<br>
+        Ghi <code>routing_decisions[]</code> vào plan để audit.</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Unclassified Handling</strong>: gán <code>generic-review-agent</code> cho <code>unclassified_files</code>. Nếu ≥ 3 files cùng pattern → emit <code>suggested_new_agents</code>.</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Strategy Selection</strong>: chọn strategy phù hợp mode. Gắn focus_tags (security, performance, state-machine, …).</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Task Decomposition</strong>: chia thành các task theo logic kỹ thuật (protocol correctness, state transitions, memory, …).</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Agent Selection</strong>: assign agent từ <code>agent-registry.yaml</code> cho mỗi task.</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Scope Control</strong>: cấp context tối thiểu — không cho agent đọc toàn repo.</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Aggregation</strong>: merge findings từ agents, dedupe, group theo severity/domain.</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content"><strong>Gap Detection + Final Output</strong>: kiểm tra missing tests / backward compat / performance. Build aggregated report (theo <code>review-report.schema.json</code>) với verdict + top_findings, sau đó gọi <code>review-report-render-skill</code> để ghi <code>.review/&lt;review_id&gt;/</code> (meta.json, plan.json, report.json/md/html, findings/). Chi tiết ở trang <a href="#output" onclick="showPage('output')">Output &amp; Artifacts</a>.</div></div>
+    </div>
+
+    <h2>Guardrails</h2>
+    <ul>
+      <li>Không review từng dòng code; không viết fix</li>
+      <li>Chỉ assign agent có trong registry</li>
+      <li>Validate <code>commit_spec.count</code> ∈ [1, 10]</li>
+      <li>File không match domain → phải assign <code>generic-review-agent</code>, không bỏ qua</li>
+      <li>Mọi output phải đúng JSON schema</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== AGENTS ===== -->
+<div id="agents" class="content-page">
+  <div class="page-header">
+    <h1>Agents</h1>
+    <p class="subtitle">7 review agents — mỗi agent đóng shape giống nhau</p>
+  </div>
+
+  <div class="section">
+    <h2>Cấu trúc chung của một Agent</h2>
+    <p>Mọi agent (bao gồm Web) đều tuân theo cùng skeleton 8 section:</p>
+    <ol>
+      <li><strong>PURPOSE</strong> — domain và phạm vi</li>
+      <li><strong>WHEN TO USE</strong> — ✅ trigger rõ ràng / ❌ loại trừ</li>
+      <li><strong>EXPECTED INPUTS</strong> — review-task schema</li>
+      <li><strong>WORKFLOW</strong> — các bước review chi tiết</li>
+      <li><strong>DOMAIN CHECKLIST</strong> — danh sách kiểm tra đặc thù</li>
+      <li><strong>OUTPUT FORMAT</strong> — review-findings schema</li>
+      <li><strong>DEPENDENCIES</strong> — skills cần có</li>
+      <li><strong>FINAL CHECK</strong> — self-review trước khi trả kết quả</li>
+    </ol>
+
+    <h2>Danh sách Agent</h2>
+    <table>
+      <tr><th>Agent</th><th>Domain</th><th>Trigger keywords</th><th>Allowed paths (ví dụ)</th></tr>
+      <tr><td><code>dhcp-review-agent</code></td><td>DHCP server/client/lease</td><td>odhcpd, dnsmasq, dhcp, lease, renew</td><td><code>package/**/odhcpd/**</code>, <code>package/**/dnsmasq/**</code>, <code>apps/**/udhcp/**</code>, <code>userspace/**/dhcpd/**</code></td></tr>
+      <tr><td><code>pppoe-review-agent</code></td><td>PPP/PPPoE session, LCP, reconnect</td><td>pppoe, ppp, pppd, lcp, chap, pap</td><td><code>package/**/ppp/**</code>, <code>apps/**/pppoe/**</code>, <code>apps/**/ppp/**</code>, <code>userspace/**/ppp/**</code></td></tr>
+      <tr><td><code>tr069-review-agent</code></td><td>CWMP/TR-069/TR-181</td><td>tr069, cwmp, acs, tr181, parameter</td><td><code>package/**/icwmpd/**</code>, <code>dl/vnptt-unify-1.0/**/icwmpd/**</code>, <code>apps/**/TR64_69/**</code>, <code>apps/**/cwmp/**</code>, <code>userspace/**/tr069/**</code></td></tr>
+      <tr><td><code>mesh-review-agent</code></td><td>Mesh topology, backhaul, steering</td><td>mesh, 802.11s, steering, topology, controller</td><td><code>package/**/vnptt-unify/**</code>, <code>dl/vnptt-unify-1.0/**</code>, <code>apps/**/vnptt_topo/**</code>, <code>apps/**/vnptt_apac/**</code></td></tr>
+      <tr><td><code>wifi-driver-review-agent</code></td><td>WiFi driver, cfg80211, mac80211</td><td>wifi, driver, cfg80211, mac80211, mt_wifi</td><td><code>modules/**/MT7916_v7623/**</code>, <code>package/**/mt-wifi7/**</code>, <code>package/**/mt-wifi/**</code></td></tr>
+      <tr><td><code>web-review-agent</code></td><td>WebGUI: HTML/JS/CSS/Lua/CGI</td><td>web, gui, ui, form, cgi, luci, httpd, lua</td><td><code>package/**/webclient/**</code>, <code>dl/**/webclient-1.0/**</code>, <code>package/**/webserver/**</code>, <code>dl/**/webserver-1.0/**</code>, <code>package/**/lighttpd/**</code>, <code>apps/**/cgi-bin/**</code>, <code>apps/**/boa-asp/**</code>, <code>**/*.html</code>, <code>**/*.js</code>, <code>**/*.css</code>, <code>**/*.lua</code></td></tr>
+      <tr><td><code>openwrt-build-review-agent</code></td><td>OpenWrt Makefile/patches/files + shell (base-files, init.d, uci-defaults, hotplug, /lib/functions.sh)</td><td>PKG_SOURCE, PKG_HASH, define Package, USE_PROCD, config_load, /lib/functions.sh</td><td><code>package/**/Makefile</code>, <code>package/**/patches/**</code>, <code>package/**/files/**</code>, <code>package/base-files/**</code>, <code>**/etc/init.d/*</code>, <code>**/etc/uci-defaults/*</code>, <code>**/etc/hotplug.d/**</code>, <code>**/lib/functions*.sh</code>, <code>**/lib/upgrade/*.sh</code></td></tr>
+      <tr><td><code>generic-review-agent</code></td><td>Fallback cho code không thuộc domain nào</td><td>(không có — fallback, <code>is_fallback: true</code>)</td><td><code>**/*.c</code>, <code>**/*.h</code>, <code>**/*.cpp</code>, <code>**/*.hpp</code>, <code>**/*.sh</code></td></tr>
+    </table>
+
+    <h2>Mô tả từng Agent</h2>
+
+    <h3>dhcp-review-agent</h3>
+    <div class="card">
+      <p><strong>Focus:</strong> DHCPv4/v6 server và client trong embedded (odhcpd, dnsmasq, vendor DHCP),
+      bao gồm option parsing, lease management, renew/rebind timer, config reload.</p>
+      <p><strong>Workflow:</strong> đọc changed code → áp <code>embedded-c-code-review-skill</code> cho phần chung →
+      áp <code>dhcp-domain-skill</code> cho bug patterns đặc thù (option length validation, lease inconsistency,
+      timer errors) → output findings.</p>
+      <p><strong>Skills dùng:</strong> <code>embedded-c-code-review-skill</code>, <code>dhcp-domain-skill</code></p>
+    </div>
+
+    <h3>pppoe-review-agent</h3>
+    <div class="card">
+      <p><strong>Focus:</strong> PPP/PPPoE discovery (PADI/PADO/PADR/PADS), session, LCP echo,
+      auth (PAP/CHAP), reconnect sau WAN flap.</p>
+      <p><strong>Workflow:</strong> kiểm tra state machine transitions → lock/timer lifecycle →
+      reconnect cleanup → config reload compatibility.</p>
+      <p><strong>Skills dùng:</strong> <code>embedded-c-code-review-skill</code>, <code>pppoe-domain-skill</code></p>
+    </div>
+
+    <h3>tr069-review-agent</h3>
+    <div class="card">
+      <p><strong>Focus:</strong> CWMP/TR-069 protocol, TR-181 parameter model, ACS session, inform/get/set flow.</p>
+      <p><strong>Workflow:</strong> check parameter name/type/access rights → inform sequencing → retry/timeout →
+      backward compatibility của parameter tree.</p>
+      <p><strong>Skills dùng:</strong> <code>tr069-domain-skill</code></p>
+    </div>
+
+    <h3>mesh-review-agent</h3>
+    <div class="card">
+      <p><strong>Focus:</strong> Mesh topology (controller-agent sync), backhaul selection, steering,
+      handoff/roaming, onboarding, config propagation.</p>
+      <p><strong>Workflow:</strong> check topology consistency → node flap recovery → backhaul logic → config sync.</p>
+      <p><strong>Skills dùng:</strong> <code>embedded-c-code-review-skill</code>, <code>mesh-domain-skill</code></p>
+    </div>
+
+    <h3>wifi-driver-review-agent</h3>
+    <div class="card">
+      <p><strong>Focus:</strong> WiFi driver kernel — cfg80211/mac80211 interaction, vendor hooks,
+      callback lifecycle, channel/state consistency, scan/assoc/disassoc error handling.</p>
+      <p><strong>Workflow:</strong> check lock/timer/memory ownership → API usage đúng → error path
+      trên scan/assoc → debug log noise.</p>
+      <p><strong>Skills dùng:</strong> <code>embedded-c-code-review-skill</code>, <code>wifi-driver-domain-skill</code></p>
+    </div>
+
+    <h3>web-review-agent</h3>
+    <div class="card">
+      <p><strong>Focus:</strong> WebGUI thiết bị nhúng — HTML templates, JavaScript, CSS, LuCI/Lua, CGI (C/shell).
+      Kiến trúc giống các agent khác: áp core skill + domain skill. Khác biệt duy nhất là domain skill được tách
+      thành nhiều sub-skill chuyên biệt theo loại file.</p>
+      <p><strong>Workflow:</strong> phân loại file theo extension (.html / .js / .lua / .cgi / .c CGI) →
+      delegate tới sub-skill phù hợp → áp <code>embedded-c-code-review-skill</code> cho CGI C →
+      cross-layer check (frontend ↔ backend) → aggregate findings.</p>
+      <p><strong>Skills dùng:</strong> <code>web-domain-skill</code>, <code>web-html-skill</code>,
+      <code>web-javascript-skill</code>, <code>web-cgi-skill</code>, <code>web-luci-skill</code>,
+      <code>embedded-c-code-review-skill</code></p>
+    </div>
+
+    <h3>openwrt-build-review-agent</h3>
+    <div class="card">
+      <p><strong>Focus:</strong> File build-level và shell infrastructure của OpenWrt —
+      Makefile (PKG_SOURCE/PKG_HASH/DEPENDS/define Package),
+      patches series (quality, apply sạch, upstream-ability), overlay files
+      (<code>files/etc/init.d/</code>, <code>uci-defaults</code>, <code>hotplug.d</code>),
+      <code>package/base-files/**</code> (bao gồm <code>/lib/functions.sh</code>,
+      <code>/sbin/*</code>, <code>/lib/upgrade/</code>).</p>
+      <p><strong>Workflow:</strong> phân loại file → check Makefile (hash match, SHA256 vs MD5, DEPENDS) →
+      check patches (fuzzy apply, generated file, Signed-off-by) → check init/uci-defaults/hotplug
+      với <code>openwrt-shell-domain-skill</code> (procd, ubus, UCI API) + <code>shell-script-review-skill</code>
+      (quoting, TOCTOU, portability) → cross-check DEPENDS vs <code>#include</code> trong source.</p>
+      <p><strong>Skills dùng:</strong> <code>openwrt-build-domain-skill</code>,
+      <code>openwrt-source-context-skill</code>, <code>shell-script-review-skill</code>,
+      <code>openwrt-shell-domain-skill</code></p>
+      <p><strong>Lưu ý:</strong> Agent này review file git thực (Makefile/patches/files/base-files/shell).
+      Source C trong tarball được route tới domain agent tương ứng (DHCP/PPPoE/Web/Generic)
+      dựa trên tên file thực.</p>
+    </div>
+
+    <h3>generic-review-agent</h3>
+    <div class="card">
+      <p><strong>Focus:</strong> Fallback agent cho code C/C++/shell không thuộc domain nào (utilities, helpers,
+      libs chưa có agent chuyên, script tiện ích). Áp dụng checklist embedded C chung + shell generic,
+      không có domain knowledge sâu.</p>
+      <p><strong>Workflow:</strong> file <code>.c/.h/.cpp/.hpp</code> → <code>embedded-c-code-review-skill</code>;
+      file <code>.sh</code> → <code>shell-script-review-skill</code> → ghi findings → nếu phát hiện
+      pattern lặp → gợi ý tạo agent mới qua field <code>suggested_new_domain</code>.</p>
+      <p><strong>Skills dùng:</strong> <code>embedded-c-code-review-skill</code>, <code>shell-script-review-skill</code></p>
+      <p><strong>Lưu ý:</strong> Orchestrator ưu tiên domain agent chuyên biệt. Generic chỉ được gọi khi
+      không agent nào khác match.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SKILLS ===== -->
+<div id="skills" class="content-page">
+  <div class="page-header">
+    <h1>Skills</h1>
+    <p class="subtitle">Core skills + Domain skills</p>
+  </div>
+
+  <div class="section">
+    <h2>Phân loại Skill</h2>
+    <ul>
+      <li><strong>Core skills</strong> (<code>skills/core/</code>): dùng chung bởi nhiều agent</li>
+      <li><strong>Domain skills</strong> (<code>skills/domains/</code>): knowledge chuyên biệt cho 1 domain</li>
+      <li><strong>Sub-skills</strong>: dùng khi domain phức tạp (ví dụ web) để tách nhỏ theo khía cạnh</li>
+    </ul>
+
+    <h2>Core Skills</h2>
+
+    <h3>git-context-skill</h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Trích xuất context từ git — resolve <code>commit_spec</code> hoặc
+      liệt kê module files. Là bước đầu tiên khi mode = <code>commit-review</code> hoặc <code>module-review</code>.</p>
+      <p><strong>Input:</strong> commit_spec (ref, count, aggregation) hoặc module_path.</p>
+      <p><strong>Output:</strong> diff_content, commits[] metadata, changed_files hoặc scope_files.</p>
+      <p><strong>Validation:</strong> count ∈ [1,10]; ref resolve được; repo depth đủ.</p>
+    </div>
+
+    <h3>openwrt-source-context-skill <span class="pill">v0.1.0</span></h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Xử lý pattern OpenWrt khi source nằm trong tarball
+      <code>dl/*.tar.gz</code>, git chỉ track Makefile + patches + overlay. Bổ sung
+      <code>git-context-skill</code>, được orchestrator gọi ở Bước 0.</p>
+      <p><strong>4 case xử lý:</strong></p>
+      <ul>
+        <li><strong>A:</strong> Commit bump PKG_VERSION → fetch 2 tarball → apply patches →
+            synthetic diff (tarball cũ vs mới)</li>
+        <li><strong>B:</strong> Commit sửa patch → apply patches-before + patches-after →
+            diff 2 state = diff ngữ nghĩa của patch</li>
+        <li><strong>C:</strong> Mixed (Makefile + patches cùng commit)</li>
+        <li><strong>D:</strong> Module review — extract + apply tất cả patches → full scope</li>
+      </ul>
+      <p><strong>Security:</strong> verify SHA256 khớp <code>PKG_HASH</code> trước khi extract
+      (tránh supply chain), tar-slip protection, không chạy script từ tarball.</p>
+      <p><strong>Cache:</strong> <code>.review/.cache/sources/&lt;pkg&gt;/&lt;ver&gt;-&lt;hash7&gt;/</code>,
+      LRU, atomic extract qua tmp rename.</p>
+      <p><strong>Virtual path:</strong> file trong tarball dùng path virtual
+      (<code>apps-1.2.4/src/main.c</code>) + metadata <code>virtual_source</code> để trace.</p>
+      <p><strong>Chi tiết:</strong> xem trang <a href="#openwrt" onclick="showPage('openwrt')">OpenWrt tarball source</a>.</p>
+    </div>
+
+    <h3>shell-script-review-skill <span class="pill">v0.1.0</span></h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Checklist shell generic (POSIX <code>sh</code>, BusyBox <code>ash</code>, <code>bash</code>)
+      cho bất kỳ file <code>.sh</code> nào trong scope review. Được dùng bởi <code>openwrt-build-review-agent</code>
+      (kèm <code>openwrt-shell-domain-skill</code>) và <code>generic-review-agent</code> (fallback).</p>
+      <p><strong>Bug categories:</strong></p>
+      <ul>
+        <li><strong>Portability:</strong> bashism trong script shebang <code>sh</code> (<code>[[ ]]</code>, array, <code>&lt;&lt;&lt;</code>, <code>${var^^}</code>)</li>
+        <li><strong>Quoting:</strong> unquoted var trong <code>rm</code>/<code>mv</code>, word splitting, IFS không restore</li>
+        <li><strong>Error handling:</strong> <code>set -e</code> pitfall, pipeline không <code>pipefail</code>, <code>cd || exit</code></li>
+        <li><strong>TOCTOU:</strong> predictable tempfile (symlink attack), check-then-use race, <code>rm -rf "$var/"</code> khi var rỗng</li>
+        <li><strong>Injection:</strong> <code>eval</code>, command substitution với untrusted input, path traversal</li>
+        <li><strong>Anti-patterns:</strong> UUOC, <code>ls</code> parse, <code>echo</code> với flag, subshell vô ý</li>
+      </ul>
+      <p><strong>Cross-reference:</strong> mapping tới ShellCheck rules (SC2086, SC2164, SC2115…) để reviewer đối chiếu nhanh.</p>
+    </div>
+
+    <h3>embedded-c-code-review-skill</h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Checklist dùng chung cho review C/C++ embedded. Bắt buộc include
+      trong mọi agent review C code.</p>
+      <p><strong>Nội dung:</strong> 9 category — pointer/bounds, integer, memory ownership, timer/callback
+      lifecycle, error path, restart/reload, hot path, backward compat, concurrency.</p>
+      <p><strong>Severity mapping:</strong> NULL deref exploitable → critical; missing NULL check input → major;
+      log verbose in hot path → minor.</p>
+    </div>
+
+    <h3>review-domain-mapping-skill</h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Map file → domain → agent. Là bước 2 của orchestrator.</p>
+      <p><strong>Algorithm 4 bước:</strong> (1) path match <code>allowed_paths</code> → (2) trigger keyword match →
+      (3) extension match cho web → (4) fallback tới <code>generic-review-agent</code>.</p>
+      <p><strong>Pattern detection:</strong> nếu ≥ 3 unclassified files cùng subdirectory →
+      emit <code>suggested_new_agents</code>.</p>
+    </div>
+
+    <h3>review-aggregation-skill</h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Merge findings từ nhiều sub-agent thành report thống nhất.</p>
+      <p><strong>Rules:</strong> Dedupe theo (file, function, title, impact); giữ severity cao hơn;
+      group theo severity → domain → file; phân loại must-fix / should-fix / observation.</p>
+      <p><strong>Per-commit mode:</strong> giữ findings riêng theo commit hash, cho phép truy xuất theo commit.</p>
+    </div>
+
+    <h3>review-risk-skill</h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Đánh giá risk cross-cutting ngoài findings.</p>
+      <p><strong>6 risk categories:</strong> regression, backward compatibility, restart/reload lifecycle,
+      memory/resource, performance/latency, security exposure.</p>
+      <p><strong>Output:</strong> risk_summary với level (high/medium/low/none) + mitigation_needed.</p>
+    </div>
+
+    <h3>review-report-render-skill</h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Chuyển <code>review-report.schema.json</code> thành artifacts
+      người đọc được (Markdown + HTML self-contained) và chuẩn hoá thư mục / đặt tên file output.
+      Là bước cuối của orchestrator (10.2).</p>
+      <p><strong>Chức năng chính:</strong></p>
+      <ul>
+        <li>Sinh <code>review_id</code> theo format <code>RV-&lt;MODE&gt;-&lt;YYYYMMDD&gt;-&lt;SEQ&gt;[-&lt;shorthash&gt;]</code></li>
+        <li>Tạo thư mục <code>.review/&lt;review_id&gt;/</code> với layout cố định</li>
+        <li>Tính <code>verdict</code> auto (block / needs-fix / ship) + <code>top_findings</code> ranking</li>
+        <li>Render Markdown theo thứ tự section cố định (parser-friendly cho CI bot)</li>
+        <li>Render HTML standalone (inline CSS, dark theme, <code>&lt;details&gt;</code> collapse)</li>
+        <li>Cập nhật <code>.review/index.json</code></li>
+      </ul>
+      <p><strong>Chi tiết:</strong> xem trang <a href="#output" onclick="showPage('output')">Output &amp; Artifacts</a>.</p>
+    </div>
+
+    <h2>Domain Skills</h2>
+
+    <h3>dhcp-domain-skill</h3>
+    <div class="card">
+      <p><strong>Bug patterns:</strong> option length not validated, lease state inconsistent across renew,
+      renew/rebind timer off-by-one, config reload loses unexpected state, malformed packet parsing.</p>
+    </div>
+
+    <h3>pppoe-domain-skill</h3>
+    <div class="card">
+      <p><strong>Bug patterns:</strong> incomplete state transitions, stale session after WAN flap,
+      LCP echo retry count not reset, auth fail path không cleanup, reconnect race condition.</p>
+    </div>
+
+    <h3>tr069-domain-skill</h3>
+    <div class="card">
+      <p><strong>Bug patterns:</strong> wrong data type / access rights, session retry/inform sequencing sai,
+      parameter mapping không backward compatible, timeout handling không đúng ACS spec.</p>
+    </div>
+
+    <h3>mesh-domain-skill</h3>
+    <div class="card">
+      <p><strong>Bug patterns:</strong> state sync inconsistent giữa controller và agent,
+      backhaul selection thiếu recovery path, config propagation không đồng bộ, handoff decision loop.</p>
+    </div>
+
+    <h3>wifi-driver-domain-skill</h3>
+    <div class="card">
+      <p><strong>Bug patterns:</strong> callback lifecycle sai (call sau free), lock/timer/memory ownership errors,
+      cfg80211/mac80211 API misuse, channel/state inconsistency, scan/assoc error path không cleanup.</p>
+    </div>
+
+    <h3>openwrt-build-domain-skill</h3>
+    <div class="card">
+      <p><strong>Bug patterns:</strong> PKG_HASH mismatch / thiếu (supply chain), MD5 legacy thay vì SHA256,
+      DEPENDS thiếu library thực dùng, hardcode host path trong CONFIGURE_ARGS, setuid không justify,
+      patch fuzzy apply, patch sửa generated file (configure/Makefile.in), patch không có Signed-off-by,
+      init script block trong start_service, uci-defaults không exit 0 / không idempotent,
+      hotplug không check $ACTION.</p>
+    </div>
+
+    <h3>openwrt-shell-domain-skill <span class="pill">v0.1.0</span></h3>
+    <div class="card">
+      <p><strong>Mục đích:</strong> Domain skill cho shell trong OpenWrt — <code>package/base-files</code>,
+      init.d, uci-defaults, hotplug, <code>/lib/functions.sh</code>, <code>/lib/upgrade/</code>.
+      Đi sâu hơn <code>openwrt-build-domain-skill</code> ở phần API contract.</p>
+      <p><strong>Nội dung chính:</strong></p>
+      <ul>
+        <li><strong>BusyBox ash context:</strong> khác biệt với bash (không array, không <code>[[ ]]</code>, không <code>trap ERR</code>)</li>
+        <li><strong><code>/lib/functions.sh</code> API:</strong> <code>config_load</code>, <code>config_foreach</code>,
+            <code>config_get_bool</code> default, <code>config_set</code> vs <code>uci set</code></li>
+        <li><strong>UCI:</strong> <code>uci -q get</code>, <code>uci commit &lt;pkg&gt;</code>, <code>uci batch</code>,
+            anonymous section index fragile</li>
+        <li><strong>procd:</strong> <code>USE_PROCD=1</code>, <code>procd_open/close_instance</code>,
+            respawn param order, <code>procd_add_reload_trigger</code>, không <code>&amp;</code> thay procd</li>
+        <li><strong>ubus:</strong> <code>jsonfilter</code> / <code>jshn.sh</code> thay grep parse, check exit code</li>
+        <li><strong>Hotplug:</strong> guard <code>$ACTION</code>/<code>$INTERFACE</code>, không block</li>
+        <li><strong>Base-files critical:</strong> đụng <code>/lib/functions.sh</code>, <code>/sbin/sysupgrade</code>,
+            <code>/lib/upgrade/</code> → CRITICAL vì ảnh hưởng toàn bộ system</li>
+      </ul>
+    </div>
+
+    <h3>web-domain-skill (overview)</h3>
+    <div class="card">
+      <p><strong>Nội dung:</strong> Overview kiến trúc WebGUI (browser ↔ httpd ↔ CGI/LuCI ↔ UCI),
+      mapping file type → sub-skill, top-level security risks, cross-layer checks (frontend ↔ backend consistency).</p>
+    </div>
+
+    <h3>Web sub-skills</h3>
+    <table>
+      <tr><th>Sub-skill</th><th>Phạm vi</th><th>Top bug patterns</th></tr>
+      <tr><td><code>web-html-skill</code></td><td>HTML templates, forms, CSS</td><td>Stored XSS, missing CSRF, hidden field leak, GET cho write operation</td></tr>
+      <tr><td><code>web-javascript-skill</code></td><td>JS client logic, AJAX, DOM</td><td>DOM XSS qua innerHTML, <code>eval()</code> với user data, double-submit, missing AJAX error handling</td></tr>
+      <tr><td><code>web-cgi-skill</code></td><td>CGI C / shell handlers</td><td>Command injection, buffer overflow POST parsing, auth bypass, path traversal</td></tr>
+      <tr><td><code>web-luci-skill</code></td><td>OpenWrt LuCI Lua</td><td><code>formvalue()</code> không validate, UCI set không commit, template không escape, ACL thiếu</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== SCHEMAS ===== -->
+<div id="schemas" class="content-page">
+  <div class="page-header">
+    <h1>Schemas</h1>
+    <p class="subtitle">Contracts giữa các thành phần</p>
+  </div>
+
+  <div class="section">
+    <h2>agent-registry.yaml</h2>
+    <p>Registry chứa tất cả agent hợp lệ. Orchestrator chỉ assign agent có trong registry này.</p>
+    <pre>- id: &lt;domain&gt;-review-agent
+  type: review-agent
+  domain: &lt;domain&gt;
+  capabilities: [...]
+  triggers: [keyword1, keyword2]    # để detect domain từ commit msg / diff
+  allowed_paths:                     # glob patterns agent được phép review
+    - package/**/&lt;domain&gt;/**
+  required_skills:                   # skills agent cần
+    - embedded-c-code-review-skill
+    - &lt;domain&gt;-domain-skill
+  output_schema: review-findings.schema.json
+  is_fallback: false                 # true chỉ cho generic-review-agent</pre>
+
+    <h2>review-task.schema.json</h2>
+    <p>Input cho mỗi sub-agent. Orchestrator tạo task theo schema này.</p>
+    <p><strong>Required fields:</strong> <code>task_id</code>, <code>domain</code>, <code>assigned_agent</code>,
+    <code>objective</code>, <code>scope_files</code>, <code>priority</code> (high/medium/low).</p>
+    <p><strong>Optional:</strong> <code>focus_tags</code>, <code>notes</code>.</p>
+
+    <h2>review-plan.schema.json</h2>
+    <p>Output của orchestrator sau Bước 3-6, trước khi gọi sub-agents.</p>
+    <p><strong>Required:</strong> <code>review_id</code>, <code>mode</code>, <code>summary</code>,
+    <code>affected_domains</code>, <code>tasks</code>.</p>
+    <p><strong>Conditional:</strong> <code>commit_spec</code> (khi mode=commit-review),
+    <code>module_path</code> (khi mode=module-review).</p>
+    <p><strong>Optional:</strong> <code>commits</code>, <code>unclassified_files</code>,
+    <code>suggested_new_agents</code>, <code>risks_to_check</code>, <code>missing_context</code>.</p>
+
+    <h2>review-findings.schema.json</h2>
+    <p>Output của mỗi sub-agent. Một file per agent, lưu ở <code>.review/&lt;review_id&gt;/findings/&lt;agent&gt;.json</code>.</p>
+    <p><strong>Required:</strong> <code>agent</code>, <code>domain</code>, <code>findings[]</code>.
+    Mỗi finding có: <code>id</code>, <code>severity</code>, <code>title</code>, <code>evidence</code>,
+    <code>impact</code>, <code>recommendation</code>, <code>confidence</code>.</p>
+    <p><strong>Finding mở rộng (v0.1.0):</strong> <code>line</code>, <code>line_end</code>,
+    <code>code_snippet</code>, <code>category</code> (security / correctness / reliability / performance /
+    compat / style / test-gap), <code>references</code> (CWE/CVE/RFC/commit), <code>tags</code>.</p>
+    <p><strong>Optional top-level:</strong> <code>review_id</code>, <code>commit_hash</code>,
+    <code>scope_files</code>, <code>missing_tests</code> (object với <code>id</code> + <code>related_findings</code>
+    + <code>priority</code>), <code>suggested_new_domain</code> (bởi generic agent), <code>sub_skill</code>.</p>
+    <p><strong>Enum:</strong> severity ∈ {critical, major, minor, info}; confidence ∈ {high, medium, low}.</p>
+
+    <h2>review-report.schema.json <span class="pill">v0.1.0</span></h2>
+    <p>Aggregated report sau khi orchestrator merge findings từ tất cả sub-agents.
+    Là <strong>source of truth duy nhất</strong> cho downstream automation (CI gate, dashboard, PR bot)
+    và là input cho <code>review-report-render-skill</code>.</p>
+    <p><strong>Required:</strong> <code>review_id</code>, <code>mode</code>, <code>generated_at</code>,
+    <code>verdict</code>, <code>stats</code>, <code>summary</code>, <code>findings[]</code>.</p>
+    <p><strong>Verdict:</strong> <code>block</code> | <code>needs-fix</code> | <code>ship</code>
+    (auto-compute từ stats + confidence).</p>
+    <p><strong>Stats:</strong> counter theo severity, breakdown <code>by_category</code> / <code>by_domain</code> /
+    <code>by_file</code>.</p>
+    <p><strong>Optional:</strong> <code>scope</code> (commit_spec/commits/module_path/files/focus_tags),
+    <code>top_findings[]</code> (ranking 5-10 id), <code>risk_summary</code>, <code>missing_tests[]</code>,
+    <code>human_attention[]</code>, <code>suggested_new_agents[]</code>, <code>agents_run[]</code>,
+    <code>artifacts</code> (paths tương đối).</p>
+  </div>
+</div>
+
+<!-- ===== OUTPUT &amp; ARTIFACTS ===== -->
+<div id="output" class="content-page">
+  <div class="page-header">
+    <h1>Output &amp; Artifacts</h1>
+    <p class="subtitle">Thư mục chuẩn, naming convention, verdict, ranking — input cho automation</p>
+  </div>
+
+  <div class="section">
+    <h2>Layout thư mục</h2>
+    <p>Mỗi lần review ghi ra <strong>một thư mục duy nhất</strong> dưới <code>.review/</code> ở repo root.
+    Layout cố định cho mọi mode:</p>
+<pre>.review/
+├── index.json                              Danh sách mọi review đã chạy (sort desc theo generated_at)
+└── RV-CMT-20260418-01-abc123d/             Một review — tên = review_id
+    ├── meta.json                           id, mode, verdict, stats — đọc nhanh cho CI gate
+    ├── plan.json                           review-plan.schema.json (domain mapping, tasks)
+    ├── report.json                         review-report.schema.json (aggregated, canonical)
+    ├── report.md                           Render Markdown cho người đọc / PR comment
+    ├── report.html                         Render HTML self-contained (inline CSS)
+    └── findings/                           Raw output mỗi sub-agent
+        ├── dhcp-review-agent.json
+        ├── web-review-agent.json
+        └── generic-review-agent.json</pre>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Tại sao tách 3 định dạng?</div>
+      <ul>
+        <li><code>report.json</code> — <strong>canonical source</strong>, dùng bởi bot/dashboard/CI</li>
+        <li><code>report.md</code> — <strong>diffable + PR-friendly</strong>, thứ tự section cố định cho grep</li>
+        <li><code>report.html</code> — <strong>người đọc cuối</strong>, mở trực tiếp trong browser, không cần server</li>
+      </ul>
+    </div>
+
+    <h2>Naming convention</h2>
+
+    <h3>Review ID</h3>
+    <p>Format: <code>RV-&lt;MODE&gt;-&lt;YYYYMMDD&gt;-&lt;SEQ&gt;[-&lt;shorthash&gt;]</code></p>
+    <table>
+      <tr><th>Mode</th><th>Prefix</th><th>Shorthash</th><th>Ví dụ</th></tr>
+      <tr><td>diff-review</td><td><code>DIFF</code></td><td>—</td><td><code>RV-DIFF-20260418-01</code></td></tr>
+      <tr><td>commit-review</td><td><code>CMT</code></td><td>7 ký tự hash của commit mới nhất</td><td><code>RV-CMT-20260418-01-abc123d</code></td></tr>
+      <tr><td>full-review</td><td><code>FULL</code></td><td>—</td><td><code>RV-FULL-20260418-01</code></td></tr>
+      <tr><td>module-review</td><td><code>MOD</code></td><td>—</td><td><code>RV-MOD-20260418-01</code></td></tr>
+    </table>
+    <p><code>SEQ</code> = counter 2 chữ số theo ngày (01, 02, ...). Reset đầu ngày.</p>
+
+    <h3>Tên file artifacts — cố định</h3>
+    <table>
+      <tr><th>Artifact</th><th>Tên file</th></tr>
+      <tr><td>Metadata ngắn (CI gate đọc)</td><td><code>meta.json</code></td></tr>
+      <tr><td>Orchestration plan</td><td><code>plan.json</code></td></tr>
+      <tr><td>Aggregated report</td><td><code>report.json</code> / <code>report.md</code> / <code>report.html</code></td></tr>
+      <tr><td>Per-agent raw findings</td><td><code>findings/&lt;agent-id&gt;.json</code> (trùng id trong registry)</td></tr>
+      <tr><td>Index tổng</td><td><code>.review/index.json</code></td></tr>
+    </table>
+    <div class="callout callout-warning">
+      <div class="callout-title">Quy tắc đặt tên</div>
+      <p>Không dấu, không space, không timestamp trong tên file. Timestamp đã nằm trong
+      <code>review_id</code> (tên thư mục cha).</p>
+    </div>
+
+    <h2>Verdict logic</h2>
+    <p>Tính tự động từ <code>stats</code> + <code>confidence</code>:</p>
+    <table>
+      <tr><th>Điều kiện</th><th>Verdict</th></tr>
+      <tr><td>≥ 1 finding <code>critical</code> (bất kỳ confidence)</td><td>🔴 <code>block</code></td></tr>
+      <tr><td>≥ 1 finding <code>major</code> với confidence = <code>high</code></td><td>🔴 <code>block</code></td></tr>
+      <tr><td>Còn lại có <code>major</code> / <code>minor</code></td><td>🟠 <code>needs-fix</code></td></tr>
+      <tr><td>Chỉ có <code>info</code> hoặc zero findings</td><td>🟢 <code>ship</code></td></tr>
+    </table>
+    <p><code>verdict_rationale</code>: 1 câu ngắn giải thích quyết định —
+    ví dụ <em>"2 critical (DHCP-001, DHCP-004) + 1 major confidence=high (WEB-CGI-002)"</em>.</p>
+
+    <h2>Top Findings ranking</h2>
+    <p>Rank findings theo score, lấy top 5-10 và lưu id vào <code>top_findings[]</code>:</p>
+    <pre>score = severity_weight × confidence_weight × category_weight
+
+severity_weight:   critical=100, major=40, minor=10, info=1
+confidence_weight: high=1.0, medium=0.7, low=0.4
+category_weight:   security=1.3, correctness=1.1, reliability=1.0,
+                   compat=0.9, performance=0.8, style=0.5</pre>
+    <p>Logic đảm bảo: security critical high đứng đầu, style minor low đứng cuối.
+    Người đọc mở report.md là thấy ngay 5-10 finding quan trọng nhất.</p>
+
+    <h2>Markdown template — thứ tự section cố định</h2>
+    <p>Thứ tự section trong <code>report.md</code> là <strong>hard contract</strong> — downstream
+    bot có thể grep section header mà không lo format đổi:</p>
+    <ol>
+      <li>Header (title + verdict badge + stats)</li>
+      <li>Scope (commits / module / files / focus_tags)</li>
+      <li>TL;DR (summary 3-5 dòng)</li>
+      <li>Top Findings (render đầy đủ code snippet)</li>
+      <li>Findings by Severity (Critical → Info, dùng <code>&lt;details&gt;</code> collapse)</li>
+      <li>Findings by Domain (bảng với agent + count)</li>
+      <li>Risk Summary</li>
+      <li>Missing Tests (checkbox list, link <code>related_findings</code>)</li>
+      <li>Human Attention</li>
+      <li>Suggested New Agents</li>
+      <li>Footer (generator version + artifacts list)</li>
+    </ol>
+
+    <h3>Finding block — MD</h3>
+<pre>#### 🔴 [DHCP-001] Buffer overflow khi parse option 82 với length &gt; 255
+- **File:** `options.c:142-158` · `parse_option82()`
+- **Agent:** `dhcp-review-agent` · **Category:** security · **Confidence:** high
+- **Evidence:**
+  ```c
+  memcpy(ctx-&gt;relay_buf, opt-&gt;data, opt-&gt;len);
+  ```
+- **Impact:** Attacker gửi DHCP packet option 82 dài &gt; 255 byte → stack/heap corruption → DoS/RCE
+- **Fix:** Thêm check `if (opt-&gt;len &gt; sizeof(ctx-&gt;relay_buf)) return -EINVAL;`
+- **Refs:** CWE-120, RFC 3046 §2.0</pre>
+
+    <h2>HTML template</h2>
+    <p>Self-contained single file — không cần web server, không external asset. Inline CSS với
+    dark theme, responsive layout, <code>&lt;details&gt;</code> collapse cho section dài.</p>
+    <div class="callout callout-success">
+      <div class="callout-title">Xem mẫu</div>
+      <p>Mở <code>examples/review-report.example.html</code> bằng browser để xem định dạng thực tế.
+      File mẫu đầy đủ cho một review DHCP với 7 findings (1 critical, 2 major, 3 minor, 1 info).</p>
+    </div>
+
+    <h2>Automation inputs</h2>
+    <p>Các field được thiết kế cho automation:</p>
+    <table>
+      <tr><th>Mục đích</th><th>Input nào dùng</th></tr>
+      <tr><td>CI gate — block merge nếu fail</td><td><code>meta.json</code> → field <code>verdict</code></td></tr>
+      <tr><td>Dashboard / trend tracking</td><td><code>report.json</code> → <code>stats</code>, <code>agents_run</code></td></tr>
+      <tr><td>PR comment ngắn</td><td><code>report.json</code> → <code>summary</code> + <code>top_findings[]</code></td></tr>
+      <tr><td>Auto-create test tickets</td><td><code>report.json</code> → <code>missing_tests[]</code></td></tr>
+      <tr><td>Gợi ý mở rộng framework</td><td><code>report.json</code> → <code>suggested_new_agents[]</code></td></tr>
+      <tr><td>Reviewer notification (human)</td><td><code>report.html</code> / <code>report.md</code></td></tr>
+      <tr><td>Historical search (grep reports)</td><td><code>.review/index.json</code></td></tr>
+    </table>
+
+    <h2>meta.json — ví dụ</h2>
+<pre>{
+  "review_id": "RV-CMT-20260418-01-abc123d",
+  "mode": "commit-review",
+  "generated_at": "2026-04-18T09:15:22Z",
+  "verdict": "block",
+  "stats": {"critical":2, "major":5, "minor":8, "info":3, "total":18},
+  "scope_summary": "3 commits on HEAD, 12 files",
+  "artifacts": {
+    "plan": "plan.json",
+    "report_json": "report.json",
+    "report_md": "report.md",
+    "report_html": "report.html",
+    "raw_findings_dir": "findings/"
+  }
+}</pre>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Guardrails của render skill</div>
+      <ul>
+        <li>KHÔNG thêm/sửa nội dung finding khi render — chỉ format</li>
+        <li>KHÔNG đổi <code>id</code> của finding</li>
+        <li>PHẢI giữ thứ tự section MD cố định</li>
+        <li>PHẢI escape HTML khi render code snippet</li>
+        <li>PHẢI ghi atomically (tmp → rename) để tránh corrupt khi crash</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== WORKFLOW EXAMPLES ===== -->
+<div id="workflow-examples" class="content-page">
+  <div class="page-header">
+    <h1>Ví dụ Workflow</h1>
+    <p class="subtitle">3 use case thực tế — từ request tới final report</p>
+  </div>
+
+  <div class="section">
+    <h2>Ví dụ 1: Review commit mới nhất</h2>
+    <p><strong>User input:</strong> <code>"review commit gần nhất"</code></p>
+
+    <h3>Bước 1 — Parse request</h3>
+    <pre>{
+  "review_id": "RV-CMT-20260418-01-a1b2c3d",
+  "mode": "commit-review",
+  "commit_spec": { "ref": "HEAD", "count": 1 }
+}</pre>
+
+    <h3>Bước 2 — git-context-skill</h3>
+    <pre>$ git show HEAD --unified=5
+$ git log -1 --format="%H|%s|%an"
+  a1b2c3d|pppoe: fix reconnect after WAN flap|dev1</pre>
+    <p>Trích xuất: <code>changed_files = [package/network/services/ppp/pppoe.c, .../lcp.c]</code>,
+    commit message = "pppoe: fix reconnect after WAN flap".</p>
+
+    <h3>Bước 3 — Orchestrator mapping</h3>
+    <ul>
+      <li><code>pppoe.c</code> → path match <code>package/**/ppp/**</code> → <code>pppoe-review-agent</code></li>
+      <li><code>lcp.c</code> → path match cùng agent</li>
+      <li>Không có unclassified files</li>
+    </ul>
+
+    <h3>Bước 4 — Task assign</h3>
+    <pre>{
+  "tasks": [{
+    "task_id": "TASK-001",
+    "domain": "pppoe",
+    "assigned_agent": "pppoe-review-agent",
+    "scope_files": ["pppoe.c", "lcp.c"],
+    "objective": "Review reconnect state transitions and LCP timeout",
+    "priority": "high",
+    "focus_tags": ["state-machine", "reconnect"]
+  }]
+}</pre>
+
+    <h3>Bước 5 — Sub-agent review</h3>
+    <p><code>pppoe-review-agent</code> áp <code>embedded-c-code-review-skill</code> +
+    <code>pppoe-domain-skill</code>, trả findings:</p>
+    <pre>{
+  "agent": "pppoe-review-agent",
+  "domain": "pppoe",
+  "commit_hash": "a1b2c3d",
+  "findings": [{
+    "id": "PPP-001",
+    "severity": "major",
+    "title": "Reconnect path may leave stale session state",
+    ...
+  }]
+}</pre>
+
+    <h3>Bước 6 — Aggregate &amp; Report</h3>
+    <div class="flow">
+      <div class="flow-step">"review commit gần nhất"</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">git show HEAD</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">orchestrator</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">pppoe-agent</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">report</div>
+    </div>
+
+    <hr style="margin:3rem 0;border:none;border-top:1px dashed var(--border);">
+
+    <h2>Ví dụ 2: Review 3 commit gần nhất</h2>
+    <p><strong>User input:</strong> <code>"review mã nguồn thay đổi của 3 commit gần nhất"</code></p>
+
+    <h3>Bước 1 — Parse request</h3>
+    <pre>{
+  "review_id": "RV-CMT-20260418-02-a1b2c3d",
+  "mode": "commit-review",
+  "commit_spec": {
+    "ref": "HEAD",
+    "count": 3,
+    "aggregation": "combined"
+  }
+}</pre>
+    <p><strong>Validation:</strong> count=3 ∈ [1,10] ✓; HEAD~3 resolve được ✓.</p>
+
+    <h3>Bước 2 — git-context-skill</h3>
+    <pre>$ git log -3 --format="%H|%s|%an"
+  a1b2c3d|pppoe: fix reconnect after WAN flap|dev1
+  d4e5f6a|luci: add PPPoE status page|dev2
+  7890abc|libs/utils: add string helper|dev3
+
+$ git diff HEAD~3 HEAD --unified=5</pre>
+    <p>Combined diff bao gồm 3 commits. Changed files tổng hợp:</p>
+    <ul>
+      <li><code>package/network/services/ppp/pppoe.c</code></li>
+      <li><code>package/network/services/ppp/lcp.c</code></li>
+      <li><code>package/luci/app/pppoe_status.lua</code></li>
+      <li><code>package/luci/view/pppoe_status.htm</code></li>
+      <li><code>libs/utils/string_helpers.c</code></li>
+      <li><code>libs/utils/string_helpers.h</code></li>
+    </ul>
+
+    <h3>Bước 3 — Orchestrator mapping</h3>
+    <table>
+      <tr><th>File</th><th>Match</th><th>Agent</th></tr>
+      <tr><td><code>pppoe.c</code>, <code>lcp.c</code></td><td>path</td><td><code>pppoe-review-agent</code></td></tr>
+      <tr><td><code>pppoe_status.lua</code></td><td>extension .lua</td><td><code>web-review-agent</code></td></tr>
+      <tr><td><code>pppoe_status.htm</code></td><td>extension .htm</td><td><code>web-review-agent</code></td></tr>
+      <tr><td><code>string_helpers.c/.h</code></td><td>không match</td><td><code>generic-review-agent</code> (fallback)</td></tr>
+    </table>
+
+    <h3>Bước 4 — Plan với 3 tasks</h3>
+    <pre>{
+  "mode": "commit-review",
+  "commit_spec": {"ref":"HEAD","count":3,"aggregation":"combined"},
+  "affected_domains": ["pppoe", "web", "generic"],
+  "unclassified_files": [
+    "libs/utils/string_helpers.c",
+    "libs/utils/string_helpers.h"
+  ],
+  "tasks": [
+    {"task_id":"TASK-001", "assigned_agent":"pppoe-review-agent", ...},
+    {"task_id":"TASK-002", "assigned_agent":"web-review-agent", ...},
+    {"task_id":"TASK-003", "assigned_agent":"generic-review-agent",
+     "notes":"Files không match domain — fallback"}
+  ]
+}</pre>
+
+    <h3>Bước 5 — Parallel sub-agent execution</h3>
+    <p>3 agents chạy song song trong scope riêng:</p>
+    <ul>
+      <li><code>pppoe-review-agent</code>: detect stale session state</li>
+      <li><code>web-review-agent</code>: phân loại .lua → <code>web-luci-skill</code>,
+      .htm → <code>web-html-skill</code>; check UCI binding, CSRF, escaping</li>
+      <li><code>generic-review-agent</code>: áp embedded C checklist cho helpers;
+      phát hiện pattern → emit <code>suggested_new_domain: "string-utils"</code></li>
+    </ul>
+
+    <h3>Bước 6 — Aggregated report</h3>
+    <div class="flow">
+      <div class="flow-step">"review 3 commit"</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">git diff HEAD~3..HEAD</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">orchestrator (3 tasks)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">pppoe + web + generic</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">combined report</div>
+    </div>
+
+    <hr style="margin:3rem 0;border:none;border-top:1px dashed var(--border);">
+
+    <h2>Ví dụ 3: Review module pppoe</h2>
+    <p><strong>User input:</strong> <code>"review mã nguồn của module pppoe"</code></p>
+
+    <h3>Bước 1 — Parse request</h3>
+    <pre>{
+  "review_id": "RV-MOD-20260418-01",
+  "mode": "module-review",
+  "module_path": "package/network/services/ppp"
+}</pre>
+
+    <h3>Bước 2 — git-context-skill</h3>
+    <pre>$ git ls-files package/network/services/ppp | grep -E '\.(c|h)$'
+  package/network/services/ppp/pppoe.c
+  package/network/services/ppp/pppoe.h
+  package/network/services/ppp/lcp.c
+  package/network/services/ppp/lcp.h
+  package/network/services/ppp/auth.c
+  package/network/services/ppp/session.c
+  package/network/services/ppp/session.h</pre>
+    <p>Tất cả 7 files → <code>scope_files</code>.</p>
+
+    <h3>Bước 3 — Orchestrator mapping</h3>
+    <p>Toàn bộ files match path <code>package/**/ppp/**</code> → <code>pppoe-review-agent</code>.
+    Không có unclassified.</p>
+
+    <h3>Bước 4 — Task assign (full-review strategy)</h3>
+    <pre>{
+  "mode": "module-review",
+  "module_path": "package/network/services/ppp",
+  "affected_domains": ["pppoe"],
+  "tasks": [{
+    "task_id": "TASK-001",
+    "domain": "pppoe",
+    "assigned_agent": "pppoe-review-agent",
+    "scope_files": [
+      "pppoe.c","pppoe.h","lcp.c","lcp.h",
+      "auth.c","session.c","session.h"
+    ],
+    "objective": "Full audit module PPP — state machine, memory, lifecycle",
+    "priority": "high",
+    "focus_tags": ["state-machine","memory","lifecycle","legacy"]
+  }],
+  "risks_to_check": [
+    "legacy bug chưa được phát hiện",
+    "memory leak trong error paths",
+    "state machine edge cases"
+  ]
+}</pre>
+
+    <h3>Bước 5 — Sub-agent full-review</h3>
+    <p>Khác với diff-review (chỉ nhìn vào changed lines), <code>pppoe-review-agent</code> ở mode
+    module-review scan toàn bộ module để tìm:</p>
+    <ul>
+      <li>Legacy bugs chưa ai phát hiện</li>
+      <li>Inconsistent patterns giữa các file</li>
+      <li>Missing error handling ở các path ít được test</li>
+      <li>Test gaps ở level integration</li>
+    </ul>
+
+    <h3>Bước 6 — Final report</h3>
+    <div class="flow">
+      <div class="flow-step">"review module pppoe"</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">git ls-files</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">orchestrator (full-review)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">pppoe-agent (7 files)</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">audit report</div>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Artifacts sau khi chạy</div>
+      <p>Cả 3 ví dụ trên đều kết thúc bằng <code>review-report-render-skill</code> ghi ra
+      <code>.review/&lt;review_id&gt;/</code> với đầy đủ <code>meta.json</code>, <code>plan.json</code>,
+      <code>report.json</code>/<code>md</code>/<code>html</code>, và <code>findings/&lt;agent&gt;.json</code>.
+      Xem chi tiết ở trang <a href="#output" onclick="showPage('output')">Output &amp; Artifacts</a>.</p>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Module-review vs Commit-review</div>
+      <p>Module-review tốn nhiều tài nguyên hơn (scan toàn bộ code), dùng cho audit định kỳ hoặc pre-release.
+      Commit-review focus vào regression risk của thay đổi mới, dùng cho CI/PR gate.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OPENWRT TARBALL SOURCE ===== -->
+<div id="openwrt" class="content-page">
+  <div class="page-header">
+    <h1>OpenWrt tarball source</h1>
+    <p class="subtitle">Review package có source trong <code>dl/*.tar.gz</code></p>
+  </div>
+
+  <div class="section">
+    <h2>Vì sao cần xử lý riêng?</h2>
+    <p>Package OpenWrt thường không commit source code trực tiếp vào git. Thay vào đó:</p>
+<pre>package/network/services/apps/
+├── Makefile                ← PKG_SOURCE, PKG_VERSION, PKG_HASH
+├── patches/                ← áp lên tarball extract
+│   ├── 001-fix-bug.patch
+│   └── 002-feature.patch
+└── files/                  ← overlay (init, uci-defaults, hotplug)
+
+dl/
+└── apps-1.2.4.tar.gz       ← KHÔNG trong git, source thực tế ở đây</pre>
+    <p>Khi review commit bump version hoặc sửa patch, <strong>diff git chỉ cho thấy
+    meta-diff</strong> (đổi 1 dòng PKG_VERSION, hoặc diff của patch file) — không phản
+    ánh đúng thay đổi code thực. Framework cần extract tarball + apply patches để so sánh.</p>
+
+    <h2>4 case xử lý</h2>
+
+    <h3>Case A — Commit chỉ bump PKG_VERSION</h3>
+    <div class="flow">
+      <div class="flow-step">Makefile: 1.2.3 → 1.2.4</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">fetch 2 tarball</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">verify SHA256</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">apply patches</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">diff old vs new</div>
+    </div>
+    <p>Synthetic diff thể hiện đúng thay đổi upstream giữa 2 version, đã loại patches
+    (vì patches được apply lên cả 2).</p>
+
+    <h3>Case B — Commit sửa/thêm patch</h3>
+    <div class="flow">
+      <div class="flow-step">patches/003-new.patch</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">extract tarball</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">apply patches-before</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">apply patches-after</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">diff ngữ nghĩa</div>
+    </div>
+    <p>Thay vì nhìn vào diff của patch file (meta-diff khó đọc), ta so sánh 2 state
+    source — trực quan như commit thường.</p>
+
+    <h3>Case C — Mixed (Makefile + patches cùng commit)</h3>
+    <p>Kết hợp logic Case A + B: dùng Makefile mới + patches mới, Makefile cũ + patches cũ.</p>
+
+    <h3>Case D — Module review OpenWrt package</h3>
+    <p>Mode <code>module-review</code>: extract tarball hiện tại, apply tất cả patches →
+    full scope_files cho agent audit toàn bộ.</p>
+
+    <h2>Luồng xử lý đầy đủ</h2>
+<pre>User: "review commit gần nhất"  (commit bump apps version)
+  │
+  ▼
+git-context-skill
+  → changed_files: [package/network/services/apps/Makefile]
+  │
+  ▼
+openwrt-source-context-skill  (Orchestrator Bước 0.2)
+  → detect: Makefile có PKG_SOURCE + PKG_HASH
+  → parse old Makefile:  PKG_VERSION=1.2.3, PKG_HASH=def456...
+  → parse new Makefile:  PKG_VERSION=1.2.4, PKG_HASH=abc123...
+  → fetch dl/apps-1.2.3.tar.gz + apps-1.2.4.tar.gz (cache-first)
+  → verify SHA256 khớp PKG_HASH (fail → abort)
+  → extract cả 2 vào .review/.cache/sources/apps/
+  → apply patches/ hiện tại lên cả 2 → .patched/
+  → diff → synthetic changed_files:
+      ├─ apps-1.2.4/src/dhcp_client.c  (M) via_patch=null
+      ├─ apps-1.2.4/src/new_feature.c  (A) via_patch=null
+      └─ apps-1.2.4/lua/apps.lua       (M) via_patch=null
+  │
+  ▼
+Orchestrator Domain Mapping (theo tên virtual)
+  ├─ Makefile                       → openwrt-build-review-agent
+  ├─ apps-1.2.4/src/dhcp_client.c   → dhcp-review-agent  (trigger "dhcp")
+  ├─ apps-1.2.4/src/new_feature.c   → generic-review-agent (fallback)
+  └─ apps-1.2.4/lua/apps.lua        → web-review-agent (extension .lua)
+  │
+  ▼
+Parallel sub-agent review
+  → findings với virtual_source metadata
+  │
+  ▼
+review-report-render-skill
+  → .review/RV-CMT-20260418-01-abc123d/
+       ├─ report.json / md / html
+       └─ findings/ (per agent)</pre>
+
+    <h2>Virtual path &amp; virtual_source</h2>
+    <p>File trong tarball dùng <strong>virtual path</strong> (tên subdir sau extract):</p>
+<pre>apps-1.2.4/src/dhcp_client.c     ← KHÔNG phải full cache path</pre>
+    <p>Finding trong report có metadata trace về tarball:</p>
+<pre>{
+  "id": "DHCP-001",
+  "file": "apps-1.2.4/src/dhcp_client.c",
+  "line": 142,
+  "virtual_source": {
+    "package": "apps",
+    "version": "1.2.4",
+    "tarball": "apps-1.2.4.tar.gz",
+    "tarball_url": "https://...",
+    "tarball_hash": "abc123...",
+    "via_patch": null,
+    "extract_path": ".review/.cache/sources/apps/1.2.4-abc1234/.patched/apps-1.2.4/src/dhcp_client.c",
+    "makefile_path": "package/network/services/apps/Makefile"
+  },
+  "severity": "critical",
+  ...
+}</pre>
+    <p>Reviewer reproduce dễ dàng: <code>tar xzf apps-1.2.4.tar.gz && vim apps-1.2.4/src/dhcp_client.c +142</code>.</p>
+
+    <h2>Security guardrails</h2>
+    <ul>
+      <li><strong>Hash verify trước khi extract</strong> — tránh supply chain attack khi URL bị MITM</li>
+      <li><strong>Tar-slip protection</strong> — không extract file symlink / path trỏ ra ngoài extract dir</li>
+      <li><strong>Không chạy code từ tarball</strong> — không invoke configure/Makefile/build script</li>
+      <li><strong>Atomic extract</strong> — qua <code>.tmp-&lt;pid&gt;/</code> rồi rename</li>
+      <li><strong>Size cap</strong> — skip file binary quá lớn, chỉ extract theo glob review-able</li>
+    </ul>
+
+    <h2>Cache</h2>
+<pre>.review/.cache/sources/
+├── _index.json                    LRU, size tracking
+└── apps/
+    ├── 1.2.3-def5678/
+    │   ├── .source/               raw extract
+    │   └── .patched/              sau apply patches
+    └── 1.2.4-abc1234/
+        ├── .source/
+        └── .patched/</pre>
+    <p>Cache key: <code>(PKG_NAME, PKG_VERSION, PKG_HASH[:7])</code>. Default cap 2GB, cấu hình qua
+    env <code>REVIEW_CACHE_MAX_MB</code>. LRU evict khi đầy.</p>
+
+    <h2>Fetch strategy</h2>
+    <p>Thử tuần tự, dừng khi thành công:</p>
+    <ol>
+      <li><code>&lt;repo_root&gt;/dl/&lt;PKG_SOURCE&gt;</code> — nếu user đã download sẵn</li>
+      <li><code>$REVIEW_DL_MIRROR/&lt;PKG_SOURCE&gt;</code> — local mirror</li>
+      <li><code>$PKG_SOURCE_URL/&lt;PKG_SOURCE&gt;</code> — network</li>
+      <li>OpenWrt macro: <code>@APACHE/</code>, <code>@GNU/</code>, <code>@SF/</code></li>
+      <li>Fail → report "tarball not available offline" + fallback review build-level only</li>
+    </ol>
+
+    <h2>Phân công agent</h2>
+    <table>
+      <tr><th>Loại file</th><th>Path</th><th>Agent</th></tr>
+      <tr><td>Makefile OpenWrt</td><td><code>package/**/Makefile</code></td><td><code>openwrt-build-review-agent</code></td></tr>
+      <tr><td>Patch file</td><td><code>package/**/patches/*.patch</code></td><td><code>openwrt-build-review-agent</code></td></tr>
+      <tr><td>Overlay files</td><td><code>package/**/files/**</code></td><td><code>openwrt-build-review-agent</code></td></tr>
+      <tr><td>Base-files shell / lib</td><td><code>package/base-files/**</code>, <code>**/lib/functions*.sh</code></td><td><code>openwrt-build-review-agent</code></td></tr>
+      <tr><td>Init / uci-defaults / hotplug</td><td><code>**/etc/init.d/*</code>, <code>**/etc/uci-defaults/*</code>, <code>**/etc/hotplug.d/**</code></td><td><code>openwrt-build-review-agent</code></td></tr>
+      <tr><td>Shell script ngoài OpenWrt path</td><td><code>**/*.sh</code></td><td><code>generic-review-agent</code> + <code>shell-script-review-skill</code></td></tr>
+      <tr><td>Source virtual (DHCP)</td><td><code>apps-1.2.4/src/dhcp_*.c</code></td><td><code>dhcp-review-agent</code></td></tr>
+      <tr><td>Source virtual (Lua)</td><td><code>apps-1.2.4/lua/*.lua</code></td><td><code>web-review-agent</code></td></tr>
+      <tr><td>Source virtual (khác)</td><td><code>apps-1.2.4/util/*.c</code></td><td><code>generic-review-agent</code></td></tr>
+    </table>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Giới hạn hiện tại</div>
+      <ul>
+        <li>Chưa hỗ trợ <code>PKG_SOURCE_PROTO:=git</code> / <code>svn</code> / <code>hg</code> — roadmap cần <code>openwrt-git-source-skill</code></li>
+        <li>Binary file trong tarball (bitmap, font, firmware blob) không review được — filter theo extension</li>
+        <li>Tarball lớn (kernel &gt; 100MB) cần network lần đầu + disk cache</li>
+        <li>Patch conflict → skip patch đó + log warning, không tạo synthetic diff cho phần conflict</li>
+      </ul>
+    </div>
+
+    <h2>Ví dụ review findings</h2>
+    <p>Commit bump <code>apps</code> từ 1.2.3 → 1.2.4, review phát hiện:</p>
+<pre>🔴 [OW-BUILD-001] PKG_HASH không khớp tarball upstream
+  File: package/network/services/apps/Makefile:8
+  Agent: openwrt-build-review-agent
+  Category: security · Confidence: high
+  Impact: Build fail hoặc supply chain attack risk
+  Fix: Chạy `make package/apps/download V=s` và update PKG_HASH đúng
+
+🟠 [DHCP-012] Buffer overflow trong dhcp option parse (tarball)
+  File: apps-1.2.4/src/dhcp_client.c:158
+  Agent: dhcp-review-agent
+  virtual_source:
+    package: apps, version: 1.2.4
+    tarball_url: https://example.com/apps-1.2.4.tar.gz
+    via_patch: null
+  Impact: Malformed DHCP packet → DoS
+  Fix: Validate opt-&gt;len ≤ sizeof(buf) trước memcpy
+
+🟡 [OW-BUILD-007] Patch 002-feature.patch thiếu Signed-off-by
+  File: package/network/services/apps/patches/002-feature.patch
+  Agent: openwrt-build-review-agent
+  Category: style · Confidence: high
+  Impact: Khó submit upstream
+  Fix: `git format-patch` hoặc thêm header manually</pre>
+  </div>
+</div>
+
+<!-- ===== MODIFY ===== -->
+<div id="modify" class="content-page">
+  <div class="page-header">
+    <h1>Sửa đổi Agent/Skill hiện có</h1>
+    <p class="subtitle">Cập nhật workflow, checklist, paths, triggers</p>
+  </div>
+
+  <div class="section">
+    <h2>Sửa nội dung Agent</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content">Mở file <code>agents/review/&lt;name&gt;-review-agent.md</code></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Sửa section tương ứng (WORKFLOW / CHECKLIST / v.v.) — giữ nguyên skeleton 8 section</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Bump <code>version</code> trong frontmatter</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Nếu đổi capabilities/skills → cập nhật registry entry tương ứng</div></div>
+    </div>
+
+    <h2>Sửa nội dung Skill</h2>
+    <p>Tương tự agent: sửa file trong <code>skills/core/</code> hoặc <code>skills/domains/</code>,
+    bump version, ensure bug patterns giữ format (có code example).</p>
+
+    <h2>Mở rộng allowed_paths / triggers</h2>
+    <p>Edit <code>schemas/agent-registry.yaml</code>:</p>
+    <pre>- id: dhcp-review-agent
+  ...
+  triggers: [odhcpd, dnsmasq, dhcp, lease, renew, rebind, dhcpv6]  # thêm dhcpv6
+  allowed_paths:
+    - package/**/odhcpd/**
+    - package/**/dnsmasq/**
+    - vendor/**/dhcp/**
+    - vendor/**/dhcpv6/**                                            # thêm path mới</pre>
+    <div class="callout callout-warning">
+      <div class="callout-title">Kiểm tra overlap</div>
+      <p>Trước khi thêm path/trigger, verify không conflict với agent khác. Nếu 2 agent cùng
+      khớp 1 file → orchestrator ưu tiên agent có path specificity cao hơn.</p>
+    </div>
+
+    <h2>Thay đổi schema</h2>
+    <p>Edit <code>schemas/*.json</code>. Quy tắc:</p>
+    <ul>
+      <li>Thêm optional field → backward-compatible, OK</li>
+      <li>Đổi required field / bỏ field → breaking, phải bump major version</li>
+      <li>Update mọi file reference schema đó (agents, orchestrator, examples)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== ADD SKILL ===== -->
+<div id="add-skill" class="content-page">
+  <div class="page-header">
+    <h1>Thêm Skill mới</h1>
+    <p class="subtitle">Core skill / Domain skill / Sub-skill</p>
+  </div>
+
+  <div class="section">
+    <h2>Quyết định loại skill</h2>
+    <table>
+      <tr><th>Loại</th><th>Thư mục</th><th>Dùng khi</th></tr>
+      <tr><td>Core skill</td><td><code>skills/core/</code></td><td>Logic shared cho nhiều agent (git, C review chung, mapping)</td></tr>
+      <tr><td>Domain skill</td><td><code>skills/domains/</code></td><td>Knowledge chuyên cho 1 domain (protocol, driver)</td></tr>
+      <tr><td>Sub-skill</td><td><code>skills/domains/</code></td><td>Tách từ domain skill khi domain quá phức tạp (xem web-*)</td></tr>
+    </table>
+
+    <h2>Template Skill</h2>
+    <pre>---
+name: &lt;name&gt;-skill
+description: &gt;
+  Skill này nên được dùng khi ...
+  Ví dụ: "...", "...".
+  KHÔNG dùng cho: ...
+version: 0.1.0
+---
+
+# SKILL: &lt;Name&gt;
+
+## 1. PURPOSE
+## 2. WHEN TO USE             (✅ / ❌)
+## 3. COMMON BUG PATTERNS     (có code example)
+## 4. REVIEW HEURISTICS
+## 5. CHECKLIST
+## 6. SEVERITY GUIDELINE
+## 7. DEPENDENCIES</pre>
+
+    <h2>Bước thêm Core Skill</h2>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content">Tạo <code>skills/core/&lt;name&gt;-skill.md</code> theo template</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Thêm skill vào <code>required_skills</code> của các agent dùng nó (trong registry)</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Cập nhật README.md + docs/index.html (Skills section)</div></div>
+    </div>
+
+    <h2>Bước thêm Sub-skill cho Domain hiện có</h2>
+    <p>Ví dụ: thêm <code>wifi-driver-ath11k-skill</code> (chipset cụ thể)</p>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content">Tạo <code>skills/domains/wifi-driver-ath11k-skill.md</code> với bug patterns ath11k</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Thêm vào <code>required_skills</code> của <code>wifi-driver-review-agent</code></div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Trong agent WORKFLOW thêm rule phân loại: "nếu file thuộc <code>drivers/**/ath11k/**</code> → apply ath11k sub-skill"</div></div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Pattern tách sub-skill (ref: web)</div>
+      <p>Khi domain skill &gt; 150 dòng hoặc cover nhiều layer (frontend/backend), hãy tách theo pattern
+      của web: <code>web-domain-skill</code> (overview) + <code>web-html/javascript/cgi/luci</code>
+      (chuyên biệt). Agent giữ shape lean, chỉ phân loại file rồi delegate.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ADD AGENT ===== -->
+<div id="add-agent" class="content-page">
+  <div class="page-header">
+    <h1>Thêm Agent mới</h1>
+    <p class="subtitle">Quy trình 4 bước để thêm domain agent</p>
+  </div>
+
+  <div class="section">
+    <h2>Khi nào nên thêm Agent?</h2>
+    <ul>
+      <li>Domain kỹ thuật rõ ràng chưa được cover (firewall, NAT, camera RTSP, system init)</li>
+      <li>Bug patterns riêng biệt, generic agent không cover đủ</li>
+      <li><code>generic-review-agent</code> đã emit <code>suggested_new_agents</code> cho pattern này</li>
+    </ul>
+    <p><strong>KHÔNG tạo agent</strong>: "chung chung" kiểu <code>network-review-agent</code> — để generic fallback handle.</p>
+
+    <h2>Quy trình 4 bước</h2>
+
+    <h3>Bước 1 — Thêm registry entry</h3>
+    <p>Edit <code>schemas/agent-registry.yaml</code>:</p>
+    <pre>- id: &lt;domain&gt;-review-agent
+  type: review-agent
+  domain: &lt;domain&gt;
+  capabilities: [cap1, cap2]
+  triggers: [keyword1, keyword2]
+  allowed_paths:
+    - package/**/&lt;domain&gt;/**
+    - vendor/**/&lt;domain&gt;/**
+  required_skills:
+    - embedded-c-code-review-skill
+    - &lt;domain&gt;-domain-skill
+  output_schema: review-findings.schema.json</pre>
+
+    <h3>Bước 2 — Tạo agent file</h3>
+    <p>Tạo <code>agents/review/&lt;domain&gt;-review-agent.md</code> theo skeleton 8 section:</p>
+    <pre>---
+name: &lt;domain&gt;-review-agent
+description: &gt;
+  Khi nào dùng, ví dụ trigger, output.
+  KHÔNG dùng cho: ...
+version: 0.1.0
+---
+
+# SKILL: &lt;Domain&gt; Review Agent
+
+## 1. PURPOSE
+## 2. WHEN TO USE
+## 3. EXPECTED INPUTS
+## 4. WORKFLOW
+## 5. DOMAIN CHECKLIST
+## 6. OUTPUT FORMAT
+## 7. DEPENDENCIES
+## 8. FINAL CHECK</pre>
+
+    <h3>Bước 3 — Tạo domain skill</h3>
+    <p>Tạo <code>skills/domains/&lt;domain&gt;-domain-skill.md</code> với bug patterns kèm code examples.</p>
+
+    <h3>Bước 4 — Test &amp; document</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num"></div><div class="step-content">Gửi 1 review request thực tế với file trong <code>allowed_paths</code> mới</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Verify orchestrator tự detect và assign đúng agent</div></div>
+      <div class="step"><div class="step-num"></div><div class="step-content">Cập nhật README.md + docs/index.html (Agents section)</div></div>
+    </div>
+
+    <h2>Ví dụ: Thêm firewall-review-agent</h2>
+    <p><strong>Mục tiêu:</strong> Review iptables/nftables/fw3/fw4 rules</p>
+
+    <h4>Registry entry</h4>
+    <pre>- id: firewall-review-agent
+  domain: firewall
+  capabilities: [iptables, nftables, filter, nat, forward]
+  triggers: [firewall, iptables, nftables, fw3, fw4, INPUT, FORWARD]
+  allowed_paths:
+    - package/**/firewall/**
+    - package/**/fw3/**
+    - package/**/fw4/**
+    - etc/config/firewall
+  required_skills:
+    - embedded-c-code-review-skill
+    - firewall-domain-skill
+  output_schema: review-findings.schema.json</pre>
+
+    <h4>Domain skill bug patterns</h4>
+    <ul>
+      <li>Default ACCEPT policy sau flush rules (dangerous)</li>
+      <li>NAT rules duplicate port forward</li>
+      <li>Zone assignment mismatch với interface</li>
+      <li>fw3 → fw4 migration compatibility</li>
+    </ul>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Không cần sửa Orchestrator</div>
+      <p>Orchestrator chỉ đọc registry + schema. Khi agent mới tuân thủ contract (input = review-task,
+      output = review-findings), framework tự động dùng agent này khi thấy file/trigger match.</p>
+    </div>
+
+    <h2>Checklist trước khi commit</h2>
+    <ul>
+      <li>✅ Registry YAML hợp lệ, không overlap path/trigger</li>
+      <li>✅ Agent file có đủ 8 section</li>
+      <li>✅ Domain skill có ≥ 3 bug patterns kèm code example</li>
+      <li>✅ Version = 0.1.0 cho lần đầu</li>
+      <li>✅ Đã test với 1 review request thực</li>
+      <li>✅ Cập nhật README.md và docs/index.html</li>
+    </ul>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+  function showPage(id){
+    document.querySelectorAll('.content-page').forEach(p=>p.classList.remove('active'));
+    const el=document.getElementById(id);
+    if(el) el.classList.add('active');
+    document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+    const active=document.querySelector(`nav a[href="#${id}"]`);
+    if(active) active.classList.add('active');
+    window.scrollTo(0,0);
+  }
+  // Initialize from hash
+  if(location.hash){
+    const id=location.hash.slice(1);
+    if(document.getElementById(id)) showPage(id);
+  }
+  window.addEventListener('hashchange',()=>{
+    const id=location.hash.slice(1);
+    if(document.getElementById(id)) showPage(id);
+  });
+</script>
+</body>
+</html>

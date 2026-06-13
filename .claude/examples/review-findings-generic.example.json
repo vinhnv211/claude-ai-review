@@ -1,0 +1,40 @@
+{
+  "agent": "generic-review-agent",
+  "domain": "generic",
+  "missing_tests": [
+    "string_helpers NULL input handling",
+    "string_helpers boundary (empty string, maxlen)"
+  ],
+  "suggested_new_domain": {
+    "suggested_domain": "string-utils",
+    "rationale": "3+ files trong libs/utils/ liên quan string processing, có thể warrant domain agent riêng nếu số lượng tăng",
+    "sample_files": [
+      "libs/utils/string_helpers.c",
+      "libs/utils/string_helpers.h"
+    ]
+  },
+  "findings": [
+    {
+      "id": "GEN-001",
+      "file": "libs/utils/string_helpers.c",
+      "function": "str_copy_safe",
+      "severity": "major",
+      "title": "Thiếu NULL check cho src parameter",
+      "evidence": "Hàm str_copy_safe(char *dst, const char *src, size_t n) gọi strlen(src) trước khi check src có NULL không.",
+      "impact": "Segfault nếu caller truyền NULL — có thể crash daemon.",
+      "recommendation": "Thêm `if (!src || !dst) return -1;` ở đầu hàm.",
+      "confidence": "high"
+    },
+    {
+      "id": "GEN-002",
+      "file": "libs/utils/string_helpers.c",
+      "function": "str_trim",
+      "severity": "minor",
+      "title": "In-place modification không document",
+      "evidence": "str_trim modify string tại chỗ nhưng docstring không nêu.",
+      "impact": "Caller truyền string literal (const) sẽ crash.",
+      "recommendation": "Document rõ behavior hoặc đổi API trả về offset.",
+      "confidence": "medium"
+    }
+  ]
+}

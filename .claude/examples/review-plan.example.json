@@ -1,0 +1,68 @@
+{
+  "review_id": "RV-PPPOE-20260418-001",
+  "mode": "commit-review",
+  "commit_spec": {
+    "ref": "HEAD",
+    "count": 3,
+    "aggregation": "combined"
+  },
+  "commits": [
+    {"hash": "a1b2c3d", "subject": "pppoe: fix reconnect after WAN flap", "author": "dev1", "date": "2026-04-17"},
+    {"hash": "d4e5f6a", "subject": "luci: add PPPoE status page", "author": "dev2", "date": "2026-04-17"},
+    {"hash": "7890abc", "subject": "libs/utils: add string helper", "author": "dev3", "date": "2026-04-18"}
+  ],
+  "summary": "PPPoE reconnect fix + new LuCI page + shared utility helper.",
+  "affected_domains": ["pppoe", "web", "generic"],
+  "unclassified_files": [
+    "libs/utils/string_helpers.c",
+    "libs/utils/string_helpers.h"
+  ],
+  "suggested_new_agents": [],
+  "tasks": [
+    {
+      "task_id": "TASK-001",
+      "domain": "pppoe",
+      "assigned_agent": "pppoe-review-agent",
+      "objective": "Review reconnect state transitions and LCP timeout handling",
+      "scope_files": [
+        "package/network/services/ppp/pppoe.c",
+        "package/network/services/ppp/lcp.c"
+      ],
+      "priority": "high",
+      "focus_tags": ["state-machine", "timeout", "reconnect"]
+    },
+    {
+      "task_id": "TASK-002",
+      "domain": "web",
+      "assigned_agent": "web-review-agent",
+      "objective": "Review LuCI PPPoE status page for XSS, CSRF and UCI binding",
+      "scope_files": [
+        "package/luci/app/pppoe_status.lua",
+        "package/luci/view/pppoe_status.htm"
+      ],
+      "priority": "medium",
+      "focus_tags": ["luci", "xss", "csrf"]
+    },
+    {
+      "task_id": "TASK-003",
+      "domain": "generic",
+      "assigned_agent": "generic-review-agent",
+      "objective": "Apply embedded C checklist to shared utility helpers",
+      "scope_files": [
+        "libs/utils/string_helpers.c",
+        "libs/utils/string_helpers.h"
+      ],
+      "priority": "medium",
+      "focus_tags": ["null-check", "bounds", "memory"],
+      "notes": "Files không match domain agent nào — fallback sang generic"
+    }
+  ],
+  "risks_to_check": [
+    "regression on WAN flap",
+    "stale session cleanup after reconnect",
+    "UCI config reload compatibility",
+    "XSS trong LuCI status page",
+    "Buffer overflow trong string_helpers"
+  ],
+  "missing_context": []
+}

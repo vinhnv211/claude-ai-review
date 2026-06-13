@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewReport",
+  "description": "Aggregated report sau khi orchestrator merge findings từ tất cả sub-agents. Dùng làm đầu vào cho render (MD/HTML) và cho downstream automation (CI gate, dashboard).",
+  "type": "object",
+  "required": ["review_id", "mode", "generated_at", "verdict", "stats", "summary", "findings"],
+  "properties": {
+    "review_id": {
+      "type": "string",
+      "description": "Format: RV-<MODE>-<YYYYMMDD>-<SEQ>[-<shorthash>]. Ví dụ: RV-CMT-20260418-01-abc123d, RV-MOD-20260418-02"
+    },
+    "mode": {"type": "string", "enum": ["diff-review", "commit-review", "full-review", "module-review"]},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "generator": {
+      "type": "object",
+      "properties": {
+        "framework_version": {"type": "string"},
+        "orchestrator": {"type": "string"}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "description": "Phạm vi thực tế của review",
+      "properties": {
+        "commit_spec": {
+          "type": "object",
+          "properties": {
+            "ref": {"type": "string"},
+            "count": {"type": "integer"},
+            "aggregation": {"type": "string", "enum": ["combined", "per-commit"]}
+          }
+        },
+        "commits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "hash": {"type": "string"},
+              "subject": {"type": "string"},
+              "author": {"type": "string"},
+              "date": {"type": "string"}
+            }
+          }
+        },
+        "module_path": {"type": "string"},
+        "files": {"type": "array", "items": {"type": "string"}},
+        "focus_tags": {"type": "array", "items": {"type": "string"}},
+        "openwrt_packages": {
+          "type": "array",
+          "description": "Nếu review đụng OpenWrt package có tarball source",
+          "items": {
+            "type": "object",
+            "properties": {
+              "pkg_name": {"type": "string"},
+              "pkg_version": {"type": "string"},
+              "prev_version": {"type": "string"},
+              "makefile_path": {"type": "string"},
+              "patches_applied": {"type": "array", "items": {"type": "string"}},
+              "patches_changed": {"type": "array", "items": {"type": "string"}},
+              "patches_failed": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        }
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["block", "needs-fix", "ship"],
+      "description": "block = có critical hoặc major confidence=high; needs-fix = có major/minor; ship = chỉ có info hoặc sạch"
+    },
+    "verdict_rationale": {"type": "string"},
+    "stats": {
+      "type": "object",
+      "required": ["critical", "major", "minor", "info", "total"],
+      "properties": {
+        "critical": {"type": "integer"},
+        "major": {"type": "integer"},
+        "minor": {"type": "integer"},
+        "info": {"type": "integer"},
+        "total": {"type": "integer"},
+        "by_category": {
+          "type": "object",
+          "additionalProperties": {"type": "integer"}
+        },
+        "by_domain": {
+          "type": "object",
+          "additionalProperties": {"type": "integer"}
+        },
+        "by_file": {
+          "type": "object",
+          "additionalProperties": {"type": "integer"}
+        }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "TL;DR 3-5 dòng. Plain text (không markdown)."
+    },
+    "top_findings": {
+      "type": "array",
+      "description": "5-10 findings quan trọng nhất, ranked theo severity + confidence + category weight",
+      "items": {"type": "string", "description": "Finding id (reference vào findings[].id)"}
+    },
+    "findings": {
+      "type": "array",
+      "description": "Merged findings từ tất cả agents. Mỗi item theo review-findings.schema.json#/properties/findings/items, có thêm agent và domain.",
+      "items": {
+        "type": "object",
+        "required": ["id", "agent", "domain", "severity", "title", "evidence", "impact", "recommendation", "confidence"],
+        "properties": {
+          "id": {"type": "string"},
+          "agent": {"type": "string"},
+          "domain": {"type": "string"},
+          "sub_skill": {"type": "string"},
+          "file": {"type": "string"},
+          "function": {"type": "string"},
+          "line": {"type": "integer"},
+          "line_end": {"type": "integer"},
+          "severity": {"type": "string", "enum": ["critical", "major", "minor", "info"]},
+          "category": {"type": "string"},
+          "title": {"type": "string"},
+          "evidence": {"type": "string"},
+          "code_snippet": {"type": "string"},
+          "impact": {"type": "string"},
+          "recommendation": {"type": "string"},
+          "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+          "references": {"type": "array", "items": {"type": "string"}},
+          "tags": {"type": "array", "items": {"type": "string"}},
+          "commit_hash": {"type": "string"},
+          "virtual_source": {
+            "type": "object",
+            "description": "Metadata OpenWrt tarball source (xem review-findings.schema.json)",
+            "properties": {
+              "package": {"type": "string"},
+              "version": {"type": "string"},
+              "tarball": {"type": "string"},
+              "tarball_url": {"type": "string"},
+              "tarball_hash": {"type": "string"},
+              "via_patch": {"type": ["string", "null"]},
+              "extract_path": {"type": "string"},
+              "makefile_path": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "missing_tests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description"],
+        "properties": {
+          "id": {"type": "string"},
+          "description": {"type": "string"},
+          "related_findings": {"type": "array", "items": {"type": "string"}},
+          "priority": {"type": "string", "enum": ["high", "medium", "low"]}
+        }
+      }
+    },
+    "human_attention": {
+      "type": "array",
+      "description": "Điểm cần người review thẩm định (confidence low, ambiguous intent, legacy code).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "area": {"type": "string"},
+          "reason": {"type": "string"},
+          "related_findings": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "risk_summary": {
+      "type": "object",
+      "properties": {
+        "regression": {"type": "string"},
+        "compatibility": {"type": "string"},
+        "performance": {"type": "string"},
+        "security": {"type": "string"}
+      }
+    },
+    "suggested_new_agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "suggested_domain": {"type": "string"},
+          "rationale": {"type": "string"},
+          "sample_files": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "agents_run": {
+      "type": "array",
+      "description": "Danh sách agents đã chạy + số finding của mỗi agent",
+      "items": {
+        "type": "object",
+        "properties": {
+          "agent": {"type": "string"},
+          "domain": {"type": "string"},
+          "finding_count": {"type": "integer"},
+          "scope_files": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "description": "Đường dẫn tương đối các file xuất ra trong review dir",
+      "properties": {
+        "plan": {"type": "string", "default": "plan.json"},
+        "report_json": {"type": "string", "default": "report.json"},
+        "report_md": {"type": "string", "default": "report.md"},
+        "report_html": {"type": "string", "default": "report.html"},
+        "raw_findings_dir": {"type": "string", "default": "findings/"}
+      }
+    }
+  }
+}

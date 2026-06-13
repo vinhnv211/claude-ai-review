@@ -1,0 +1,15 @@
+{
+  "review_id": "RV-PPPOE-20260406-001",
+  "mode": "diff-review",
+  "changed_files": [
+    "package/network/services/ppp/pppoe.c",
+    "package/network/services/ppp/lcp.c",
+    "package/network/config/uci_network.c"
+  ],
+  "change_summary": "Improve PPPoE reconnect after WAN flap",
+  "design_note": "Reconnect should recover within timeout without stale session",
+  "constraints": [
+    "Do not break existing config compatibility",
+    "Avoid additional CPU overhead in hot path"
+  ]
+}

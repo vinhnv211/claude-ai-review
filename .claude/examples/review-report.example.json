@@ -1,0 +1,187 @@
+{
+  "review_id": "RV-CMT-20260418-01-abc123d",
+  "mode": "commit-review",
+  "generated_at": "2026-04-18T09:15:22Z",
+  "generator": {
+    "framework_version": "0.1.0",
+    "orchestrator": "review-orchestrator@0.1.0"
+  },
+  "scope": {
+    "commit_spec": {"ref": "HEAD", "count": 1, "aggregation": "combined"},
+    "commits": [
+      {"hash": "abc123def4567890", "subject": "dhcp: add option 82 support", "author": "dev@example.com", "date": "2026-04-18T08:30:00Z"}
+    ],
+    "files": ["package/network/services/odhcpd/src/leases.c", "package/network/services/odhcpd/src/options.c"],
+    "focus_tags": []
+  },
+  "verdict": "block",
+  "verdict_rationale": "1 critical (DHCP-001) + 1 major confidence=high (DHCP-002)",
+  "stats": {
+    "critical": 1, "major": 2, "minor": 3, "info": 1, "total": 7,
+    "by_category": {"security": 3, "correctness": 2, "reliability": 1, "test-gap": 1},
+    "by_domain": {"dhcp": 7},
+    "by_file": {"leases.c": 4, "options.c": 3}
+  },
+  "summary": "Commit thêm DHCP option 82 relay agent info. Phát hiện 1 buffer overflow (critical) khi parse option dài > 255 byte, 1 thiếu validation độ dài suboption (major, confidence high), và 2 vấn đề lease cleanup + logging. Chưa có test cho malformed packet.",
+  "top_findings": ["DHCP-001", "DHCP-002", "DHCP-004"],
+  "findings": [
+    {
+      "id": "DHCP-001",
+      "agent": "dhcp-review-agent",
+      "domain": "dhcp",
+      "file": "package/network/services/odhcpd/src/options.c",
+      "function": "parse_option82",
+      "line": 142, "line_end": 158,
+      "severity": "critical",
+      "category": "security",
+      "title": "Buffer overflow khi parse option 82 với length > 255",
+      "evidence": "memcpy(ctx->relay_buf, opt->data, opt->len); — không check opt->len ≤ sizeof(ctx->relay_buf) (=256)",
+      "code_snippet": "if (opt->code == 82) {\n    memcpy(ctx->relay_buf, opt->data, opt->len);\n    ctx->relay_len = opt->len;\n}",
+      "impact": "Attacker gửi DHCP packet với option 82 dài > 255 byte → stack/heap corruption → DoS hoặc RCE",
+      "recommendation": "Thêm check: if (opt->len > sizeof(ctx->relay_buf)) return -EINVAL; trước memcpy. Hoặc dùng memcpy với clamped len.",
+      "confidence": "high",
+      "references": ["CWE-120", "RFC 3046 §2.0"],
+      "tags": ["buffer-overflow", "input-validation"]
+    },
+    {
+      "id": "DHCP-002",
+      "agent": "dhcp-review-agent",
+      "domain": "dhcp",
+      "file": "package/network/services/odhcpd/src/options.c",
+      "function": "parse_suboption",
+      "line": 201,
+      "severity": "major",
+      "category": "security",
+      "title": "Thiếu validation suboption length trước khi advance pointer",
+      "evidence": "ptr += sub->len + 2; — nếu sub->len làm ptr vượt end buffer, vòng lặp kế tiếp đọc memory bất hợp pháp",
+      "code_snippet": "while (ptr < end) {\n    sub = (suboption_t *)ptr;\n    ptr += sub->len + 2;  // no bounds check\n}",
+      "impact": "Out-of-bounds read, có thể leak memory hoặc crash",
+      "recommendation": "Check `ptr + sub->len + 2 <= end` trước khi advance.",
+      "confidence": "high",
+      "references": ["CWE-125"]
+    },
+    {
+      "id": "DHCP-003",
+      "agent": "dhcp-review-agent",
+      "domain": "dhcp",
+      "file": "package/network/services/odhcpd/src/leases.c",
+      "function": "lease_expire",
+      "line": 88,
+      "severity": "major",
+      "category": "reliability",
+      "title": "Lease không được free khi expire dẫn đến memory leak",
+      "evidence": "list_del(&lease->node); — thiếu free(lease) sau khi remove",
+      "impact": "Long-running daemon (uptime tháng) có thể leak hàng nghìn lease struct",
+      "recommendation": "Thêm free(lease) sau list_del, hoặc dùng macro list_del_and_free().",
+      "confidence": "high",
+      "tags": ["memory-leak"]
+    },
+    {
+      "id": "DHCP-004",
+      "agent": "dhcp-review-agent",
+      "domain": "dhcp",
+      "file": "package/network/services/odhcpd/src/leases.c",
+      "function": "lease_add",
+      "line": 45,
+      "severity": "minor",
+      "category": "correctness",
+      "title": "Không handle trường hợp MAC trùng — ghi đè lease cũ không thông báo",
+      "evidence": "if (existing) list_del(&existing->node); — silent replace, không log",
+      "impact": "Khó debug khi 2 device dùng MAC giả mạo",
+      "recommendation": "Log warning khi replace, hoặc reject duplicate tuỳ config.",
+      "confidence": "medium"
+    },
+    {
+      "id": "DHCP-005",
+      "agent": "dhcp-review-agent",
+      "domain": "dhcp",
+      "file": "package/network/services/odhcpd/src/leases.c",
+      "function": "lease_write",
+      "line": 178,
+      "severity": "minor",
+      "category": "reliability",
+      "title": "fprintf không check return value",
+      "evidence": "fprintf(fp, \"%s ...\", mac_str); — disk full / IO error bị nuốt",
+      "impact": "Lease file corrupt không được phát hiện",
+      "recommendation": "Check return của fprintf; fsync trước fclose.",
+      "confidence": "medium"
+    },
+    {
+      "id": "DHCP-006",
+      "agent": "dhcp-review-agent",
+      "domain": "dhcp",
+      "file": "package/network/services/odhcpd/src/options.c",
+      "function": "parse_option82",
+      "line": 155,
+      "severity": "minor",
+      "category": "style",
+      "title": "Magic number 82 dùng trực tiếp thay vì define",
+      "evidence": "if (opt->code == 82) — nên dùng DHCP_OPT_RELAY_AGENT_INFO",
+      "impact": "Giảm readability",
+      "recommendation": "Define constant trong options.h.",
+      "confidence": "high"
+    },
+    {
+      "id": "DHCP-007",
+      "agent": "dhcp-review-agent",
+      "domain": "dhcp",
+      "file": "package/network/services/odhcpd/src/options.c",
+      "severity": "info",
+      "category": "test-gap",
+      "title": "Không có unit test cho parse_option82",
+      "evidence": "tests/ chỉ có option1-12, không có option 82",
+      "impact": "Regression risk cao khi refactor",
+      "recommendation": "Thêm test case: valid, max length, overflow, malformed suboption.",
+      "confidence": "high"
+    }
+  ],
+  "missing_tests": [
+    {
+      "id": "MT-001",
+      "description": "DHCP packet với option 82 length > 255 byte",
+      "related_findings": ["DHCP-001"],
+      "priority": "high"
+    },
+    {
+      "id": "MT-002",
+      "description": "Malformed suboption với length vượt buffer end",
+      "related_findings": ["DHCP-002"],
+      "priority": "high"
+    },
+    {
+      "id": "MT-003",
+      "description": "Lease expire long-run test (leak detection)",
+      "related_findings": ["DHCP-003"],
+      "priority": "medium"
+    }
+  ],
+  "human_attention": [
+    {
+      "area": "Option 82 relay forwarding logic",
+      "reason": "Spec RFC 3046 cho phép nested option, implementation hiện tại không handle — cần product owner xác nhận yêu cầu",
+      "related_findings": ["DHCP-001", "DHCP-002"]
+    }
+  ],
+  "risk_summary": {
+    "regression": "Thấp — chỉ thêm code path mới (option 82), không sửa logic cũ",
+    "compatibility": "Backward compatible với DHCPv4 RFC 2131",
+    "performance": "Không đo — option 82 parse thêm ~20us mỗi packet, ảnh hưởng thấp",
+    "security": "CAO — 1 critical RCE vector + 1 OOB read chưa fix"
+  },
+  "suggested_new_agents": [],
+  "agents_run": [
+    {
+      "agent": "dhcp-review-agent",
+      "domain": "dhcp",
+      "finding_count": 7,
+      "scope_files": ["package/network/services/odhcpd/src/leases.c", "package/network/services/odhcpd/src/options.c"]
+    }
+  ],
+  "artifacts": {
+    "plan": "plan.json",
+    "report_json": "report.json",
+    "report_md": "report.md",
+    "report_html": "report.html",
+    "raw_findings_dir": "findings/"
+  }
+}

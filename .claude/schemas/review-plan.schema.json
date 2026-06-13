@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewPlan",
+  "type": "object",
+  "required": ["review_id", "mode", "summary", "affected_domains", "tasks"],
+  "properties": {
+    "review_id": {"type": "string", "description": "Unique review ID, e.g. RV-PPPOE-20260406-001"},
+    "mode": {
+      "type": "string",
+      "enum": ["diff-review", "commit-review", "full-review", "module-review"],
+      "description": "diff-review: PR/patch | commit-review: 1-10 commits | full-review: audit | module-review: whole module"
+    },
+    "commit_spec": {
+      "type": "object",
+      "description": "Required when mode = commit-review",
+      "required": ["ref", "count"],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "Git ref: HEAD, HEAD~N, or commit hash. Indicates the NEWEST commit in the range."
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 1,
+          "description": "Number of commits to review, from ref going backwards. Max 10."
+        },
+        "aggregation": {
+          "type": "string",
+          "enum": ["combined", "per-commit"],
+          "default": "combined",
+          "description": "combined: single diff covering all commits. per-commit: review each commit separately."
+        }
+      }
+    },
+    "commits": {
+      "type": "array",
+      "description": "Resolved commit metadata (populated by git-context-skill)",
+      "items": {
+        "type": "object",
+        "properties": {
+          "hash": {"type": "string"},
+          "subject": {"type": "string"},
+          "author": {"type": "string"},
+          "date": {"type": "string"}
+        }
+      }
+    },
+    "module_path": {
+      "type": "string",
+      "description": "Module directory path (required for module-review mode)"
+    },
+    "summary": {"type": "string"},
+    "affected_domains": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Technical domains. Include 'generic' when some files fall outside existing domains."
+    },
+    "unclassified_files": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Files not matching any specific domain agent. Routed to generic-review-agent."
+    },
+    "suggested_new_agents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "suggested_domain": {"type": "string"},
+          "rationale": {"type": "string"},
+          "sample_files": {"type": "array", "items": {"type": "string"}}
+        }
+      },
+      "description": "Orchestrator suggests new domain agents when unclassified files show a recurring pattern."
+    },
+    "tasks": {
+      "type": "array",
+      "items": {"$ref": "review-task.schema.json"}
+    },
+    "risks_to_check": {"type": "array", "items": {"type": "string"}},
+    "missing_context": {"type": "array", "items": {"type": "string"}}
+  }
+}

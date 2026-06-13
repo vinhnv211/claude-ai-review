@@ -1,0 +1,15 @@
+{
+  "review_id": "RV-COMMIT-20260418-001",
+  "mode": "commit-review",
+  "commit_spec": {
+    "ref": "HEAD",
+    "count": 3,
+    "aggregation": "combined"
+  },
+  "change_summary": "Resolved by git-context-skill from last 3 commits",
+  "design_note": "Review 3 commit gần nhất để kiểm tra trước khi release firmware",
+  "constraints": [
+    "Không được phá backward compatibility UCI config",
+    "Không được tăng CPU trong hot path"
+  ]
+}

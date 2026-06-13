@@ -1,0 +1,51 @@
+{
+  "agent": "pppoe-review-agent",
+  "domain": "pppoe",
+  "commit_hash": "a1b2c3d",
+  "missing_tests": [
+    {
+      "id": "MT-001",
+      "description": "WAN flap during active session",
+      "related_findings": ["PPP-001"],
+      "priority": "high"
+    },
+    {
+      "id": "MT-002",
+      "description": "Auth fail followed by reconnect",
+      "related_findings": ["PPP-001"],
+      "priority": "medium"
+    },
+    {
+      "id": "MT-003",
+      "description": "LCP echo timeout after reconnect",
+      "related_findings": ["PPP-002"],
+      "priority": "medium"
+    }
+  ],
+  "findings": [
+    {
+      "id": "PPP-001",
+      "file": "package/network/services/ppp/pppoe.c",
+      "function": "pppoe_reconnect",
+      "severity": "major",
+      "category": "reliability",
+      "title": "Reconnect path may leave stale session state",
+      "evidence": "Old session cleanup is not guaranteed before reconnect branch returns success.",
+      "impact": "Subsequent reconnect attempts may operate on inconsistent session state.",
+      "recommendation": "Ensure deterministic cleanup before starting a new reconnect attempt.",
+      "confidence": "medium"
+    },
+    {
+      "id": "PPP-002",
+      "file": "package/network/services/ppp/lcp.c",
+      "function": "lcp_echo_timeout_handler",
+      "severity": "minor",
+      "category": "correctness",
+      "title": "LCP echo retry count không reset sau reconnect",
+      "evidence": "Biến retry_count vẫn giữ giá trị cũ từ session trước.",
+      "impact": "Session mới có thể fail sớm hơn mong đợi sau WAN flap.",
+      "recommendation": "Reset retry_count = 0 trong lcp_init() khi reconnect.",
+      "confidence": "high"
+    }
+  ]
+}

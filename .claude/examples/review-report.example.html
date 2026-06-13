@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="vi"><head>
+<meta charset="utf-8">
+<title>Review Report RV-CMT-20260418-01-abc123d</title>
+<style>
+  :root { --crit:#c0392b; --maj:#e67e22; --min:#f1c40f; --info:#95a5a6;
+          --bg:#0f1419; --panel:#1a2028; --fg:#d7dce3; --muted:#8a93a0; --acc:#4aa3df; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,Segoe UI,Roboto,sans-serif;
+         background:var(--bg); color:var(--fg); line-height:1.5; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  h1 { font-size:1.6rem; margin:0 0 8px; }
+  h2 { border-bottom:1px solid #2a323d; padding-bottom:6px; margin-top:32px; font-size:1.25rem; }
+  .verdict { display:inline-block; padding:4px 10px; border-radius:6px;
+             font-weight:600; font-size:.9rem; text-transform:uppercase; letter-spacing:.5px; }
+  .verdict.block { background:var(--crit); color:#fff; }
+  .verdict.needs-fix { background:var(--maj); color:#fff; }
+  .verdict.ship { background:#27ae60; color:#fff; }
+  .stats { display:flex; gap:12px; flex-wrap:wrap; margin:12px 0 20px; }
+  .stat { background:var(--panel); padding:8px 14px; border-radius:6px;
+          border-left:4px solid var(--muted); min-width:90px; }
+  .stat.crit { border-color:var(--crit); }
+  .stat.maj  { border-color:var(--maj); }
+  .stat.min  { border-color:var(--min); }
+  .stat .n { font-size:1.4rem; font-weight:700; display:block; line-height:1.1; }
+  .stat .lbl { font-size:.8rem; color:var(--muted); }
+  .finding { background:var(--panel); border-radius:8px; padding:14px 18px;
+             margin:12px 0; border-left:4px solid var(--muted); }
+  .finding.critical { border-color:var(--crit); }
+  .finding.major    { border-color:var(--maj); }
+  .finding.minor    { border-color:var(--min); }
+  .finding h4 { margin:0 0 6px; font-size:1.05rem; }
+  .finding .meta { color:var(--muted); font-size:.85rem; margin:4px 0 10px; }
+  .finding pre { background:#0a0d12; padding:10px 12px; border-radius:6px;
+                 overflow-x:auto; font-size:.85rem; margin:8px 0; }
+  .finding .label { color:var(--acc); font-weight:600; }
+  table { border-collapse: collapse; width:100%; margin:12px 0; font-size:.9rem; }
+  th, td { border:1px solid #2a323d; padding:6px 10px; text-align:left; }
+  th { background:var(--panel); }
+  td.num { text-align:right; }
+  details { background:var(--panel); border-radius:6px; padding:10px 14px; margin:10px 0; }
+  summary { cursor:pointer; font-weight:600; }
+  code { background:#0a0d12; padding:1px 6px; border-radius:3px; font-size:.9em; }
+  .tldr { background:var(--panel); border-left:4px solid var(--acc);
+          padding:12px 16px; border-radius:4px; }
+  ul { padding-left: 22px; }
+  li { margin: 4px 0; }
+  footer { margin-top:40px; padding-top:16px; border-top:1px solid #2a323d;
+           color:var(--muted); font-size:.85rem; }
+</style>
+</head><body><div class="wrap">
+
+<h1>Review Report <code>RV-CMT-20260418-01-abc123d</code></h1>
+<p>
+  <span class="verdict block">block</span>
+  &nbsp; <em>1 critical (DHCP-001) + 1 major confidence=high (DHCP-002)</em>
+</p>
+<p style="color:var(--muted); font-size:.9rem;">
+  mode: <code>commit-review</code>
+  &nbsp;·&nbsp; generated: 2026-04-18T09:15:22Z
+</p>
+
+<div class="stats">
+  <div class="stat crit"><span class="n">1</span><span class="lbl">critical</span></div>
+  <div class="stat maj"><span class="n">2</span><span class="lbl">major</span></div>
+  <div class="stat min"><span class="n">3</span><span class="lbl">minor</span></div>
+  <div class="stat"><span class="n">1</span><span class="lbl">info</span></div>
+  <div class="stat"><span class="n">7</span><span class="lbl">total</span></div>
+</div>
+
+<h2>Scope</h2>
+<ul>
+  <li><strong>Commits (1):</strong>
+    <ul><li><code>abc123d</code> dhcp: add option 82 support — <em>dev@example.com, 2026-04-18</em></li></ul>
+  </li>
+  <li><strong>Files (2):</strong> <code>leases.c</code>, <code>options.c</code></li>
+</ul>
+
+<h2>TL;DR</h2>
+<div class="tldr">
+  Commit thêm DHCP option 82 relay agent info. Phát hiện 1 buffer overflow (critical)
+  khi parse option dài &gt; 255 byte, 1 thiếu validation độ dài suboption
+  (major, confidence high), và 2 vấn đề lease cleanup + logging.
+  Chưa có test cho malformed packet.
+</div>
+
+<h2>Top Findings</h2>
+
+<div class="finding critical">
+  <h4>[DHCP-001] Buffer overflow khi parse option 82 với length &gt; 255</h4>
+  <div class="meta">
+    <code>options.c:142-158</code> · <code>parse_option82()</code>
+    · agent <code>dhcp-review-agent</code>
+    · category: security · confidence: high
+  </div>
+  <pre><code>if (opt-&gt;code == 82) {
+    memcpy(ctx-&gt;relay_buf, opt-&gt;data, opt-&gt;len);
+    ctx-&gt;relay_len = opt-&gt;len;
+}</code></pre>
+  <p><span class="label">Impact:</span> Attacker gửi DHCP packet với option 82 dài &gt; 255 byte → stack/heap corruption → DoS hoặc RCE.</p>
+  <p><span class="label">Fix:</span> Thêm check <code>if (opt-&gt;len &gt; sizeof(ctx-&gt;relay_buf)) return -EINVAL;</code> trước memcpy.</p>
+  <p><span class="label">Refs:</span> CWE-120, RFC 3046 §2.0</p>
+</div>
+
+<div class="finding major">
+  <h4>[DHCP-002] Thiếu validation suboption length trước khi advance pointer</h4>
+  <div class="meta">
+    <code>options.c:201</code> · <code>parse_suboption()</code>
+    · agent <code>dhcp-review-agent</code>
+    · category: security · confidence: high
+  </div>
+  <pre><code>while (ptr &lt; end) {
+    sub = (suboption_t *)ptr;
+    ptr += sub-&gt;len + 2;  // no bounds check
+}</code></pre>
+  <p><span class="label">Impact:</span> Out-of-bounds read, có thể leak memory hoặc crash.</p>
+  <p><span class="label">Fix:</span> Check <code>ptr + sub-&gt;len + 2 &lt;= end</code> trước khi advance.</p>
+  <p><span class="label">Refs:</span> CWE-125</p>
+</div>
+
+<div class="finding minor">
+  <h4>[DHCP-004] Không handle trường hợp MAC trùng — ghi đè lease cũ không thông báo</h4>
+  <div class="meta">
+    <code>leases.c:45</code> · <code>lease_add()</code>
+    · agent <code>dhcp-review-agent</code>
+    · category: correctness · confidence: medium
+  </div>
+  <p><span class="label">Fix:</span> Log warning khi replace, hoặc reject duplicate tuỳ config.</p>
+</div>
+
+<h2>Findings by Severity</h2>
+<details open><summary>🔴 Critical (1)</summary>
+  <ul><li><strong>[DHCP-001]</strong> Buffer overflow — <code>options.c:142</code></li></ul>
+</details>
+<details><summary>🟠 Major (2)</summary>
+  <ul>
+    <li><strong>[DHCP-002]</strong> Thiếu validation suboption length — <code>options.c:201</code></li>
+    <li><strong>[DHCP-003]</strong> Lease không được free khi expire dẫn đến memory leak — <code>leases.c:88</code></li>
+  </ul>
+</details>
+<details><summary>🟡 Minor (3)</summary>
+  <ul>
+    <li><strong>[DHCP-004]</strong> Không handle MAC trùng — <code>leases.c:45</code></li>
+    <li><strong>[DHCP-005]</strong> fprintf không check return value — <code>leases.c:178</code></li>
+    <li><strong>[DHCP-006]</strong> Magic number 82 dùng trực tiếp — <code>options.c:155</code></li>
+  </ul>
+</details>
+<details><summary>⚪ Info (1)</summary>
+  <ul><li><strong>[DHCP-007]</strong> Không có unit test cho parse_option82</li></ul>
+</details>
+
+<h2>Findings by Domain</h2>
+<table>
+  <thead><tr><th>Domain</th><th>Agent</th><th class="num">Count</th><th class="num">Critical</th><th class="num">Major</th></tr></thead>
+  <tbody><tr><td>dhcp</td><td><code>dhcp-review-agent</code></td><td class="num">7</td><td class="num">1</td><td class="num">2</td></tr></tbody>
+</table>
+
+<h2>Risk Summary</h2>
+<ul>
+  <li><strong>Regression:</strong> Thấp — chỉ thêm code path mới (option 82)</li>
+  <li><strong>Compatibility:</strong> Backward compatible với DHCPv4 RFC 2131</li>
+  <li><strong>Performance:</strong> Option 82 parse thêm ~20us mỗi packet, ảnh hưởng thấp</li>
+  <li><strong>Security:</strong> CAO — 1 critical RCE vector + 1 OOB read chưa fix</li>
+</ul>
+
+<h2>Missing Tests</h2>
+<ul>
+  <li>☐ <strong>[MT-001]</strong> DHCP packet với option 82 length &gt; 255 byte <em>(priority: high; covers: DHCP-001)</em></li>
+  <li>☐ <strong>[MT-002]</strong> Malformed suboption với length vượt buffer end <em>(priority: high; covers: DHCP-002)</em></li>
+  <li>☐ <strong>[MT-003]</strong> Lease expire long-run test <em>(priority: medium; covers: DHCP-003)</em></li>
+</ul>
+
+<h2>Human Attention</h2>
+<ul>
+  <li><strong>Option 82 relay forwarding logic</strong> — Spec RFC 3046 cho phép nested option, implementation hiện tại không handle — cần product owner xác nhận. <em>(related: DHCP-001, DHCP-002)</em></li>
+</ul>
+
+<h2>Suggested New Agents</h2>
+<p><em>(none)</em></p>
+
+<footer>
+  Generated by review-orchestrator v0.1.0 ·
+  Artifacts: <code>plan.json</code>, <code>report.json</code>, <code>findings/</code>
+</footer>
+
+</div></body></html>
